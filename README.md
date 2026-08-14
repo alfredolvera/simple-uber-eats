@@ -10,7 +10,7 @@ A lightweight Home Assistant custom integration for tracking active Uber Eats or
 
 ## Overview
 
-Simple Uber Eats is designed around Home Assistant's native entity model. It has no custom sidebar panel, custom Lovelace frontend, built-in TTS, or order-history database/UI. Current order data is exposed through standard sensors, binary sensors, and a device tracker so it can be used with normal dashboards and automations.
+Simple Uber Eats is designed around Home Assistant's native entity model. Current order data is exposed through standard sensors, binary sensors, and a device tracker so it can be used with normal dashboards and automations.
 
 This integration is unofficial and uses Uber's web endpoints rather than a public supported API.
 
