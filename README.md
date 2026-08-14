@@ -163,9 +163,114 @@ Eats never edits `.storage` or mutates config-entry domains.
 
 ## Authentication
 
-Setup asks for the full browser cookie string from an authenticated `ubereats.com` session. Copy the request's `Cookie` header from your browser developer tools and paste it into the integration form. Never publish or share this value.
+Simple Uber Eats connects using an existing signed-in Uber Eats browser session.
+It does not ask for your Uber email, password, or two-factor authentication
+code. This is an unofficial integration using Uber's web endpoints, not an
+official Uber authentication method or public API.
 
-The integration extracts the required session values locally and preserves cookie rotation returned by Uber. Use **Reconfigure** on the config entry to replace credentials proactively. When the integration confirms that authentication has expired, Home Assistant starts its reauthentication flow and asks for a fresh cookie string.
+The integration needs the complete value of a browser request's `Cookie`
+header. Use a desktop browser and follow the instructions for your browser
+below.
+
+### 1. Sign in to Uber Eats
+
+1. Open [https://www.ubereats.com/](https://www.ubereats.com/).
+2. Sign in to the Uber Eats account you want to connect.
+3. Wait for the site to load fully and confirm that you are signed in.
+4. Keep the Uber Eats tab open.
+
+### 2. Find an authenticated request
+
+`getActiveOrdersV1` is the preferred request because it is one of the
+operations Simple Uber Eats uses to retrieve active orders.
+
+#### Chrome, Edge, Brave, or another Chromium browser
+
+1. Press **F12** or **Ctrl+Shift+I**. On macOS, press
+   **Option+Command+I**.
+2. Select the **Network** tab.
+3. Keep Developer Tools open and reload the Uber Eats page.
+4. Enter `getActiveOrdersV1` in the Network filter box.
+5. Select the request named **getActiveOrdersV1**.
+6. Open **Headers** and scroll to **Request Headers**.
+7. Find **Cookie** and copy its complete value.
+
+If the browser abbreviates or formats the headers, use **view source** in the
+Request Headers section. If `getActiveOrdersV1` does not appear, clear the
+filter, reload again, and look for an authenticated `ubereats.com` request such
+as `getUserV1`.
+
+#### Firefox
+
+1. Press **F12** or **Ctrl+Shift+I**. On macOS, press
+   **Option+Command+I**.
+2. Select **Network** and reload the Uber Eats page.
+3. Filter for `getActiveOrdersV1` and select the request.
+4. Open **Headers** and expand **Request Headers**.
+5. Find **Cookie** and copy its complete value.
+6. Use the **Raw** view if the complete unformatted header is not visible.
+
+#### Safari on macOS
+
+If the Develop menu is hidden:
+
+1. Open **Safari → Settings → Advanced**.
+2. Enable **Show features for web developers**.
+
+Then:
+
+1. Return to the signed-in Uber Eats page.
+2. Choose **Develop → Show Web Inspector**.
+3. Open **Network** and reload Uber Eats.
+4. Find and select `getActiveOrdersV1`.
+5. Inspect its request headers, find **Cookie**, and copy the complete value.
+
+### 3. Paste the complete Cookie value
+
+Paste only the Cookie header's value into the **Uber Eats Cookie header**
+field. Its general shape is:
+
+```text
+cookie1=value1; cookie2=value2; cookie3=value3; ...
+```
+
+Do not include the `Cookie:` label, add quotation marks, or copy only one
+individual cookie. The complete value must include, among other cookies:
+
+```text
+sid=...
+uev2.id.session=...
+```
+
+Simple Uber Eats validates the browser session before saving the account. It
+extracts the required session values locally and preserves cookie rotation
+returned by Uber.
+
+### Authentication troubleshooting
+
+- **`getActiveOrdersV1` is missing:** Make sure Developer Tools was open and
+  the Network tab was recording before reloading. Confirm you are signed in,
+  clear the filter, and look for `getUserV1` or another request made directly
+  to `www.ubereats.com`.
+- **`sid` is missing:** You probably copied only part of the header or chose
+  the wrong request. Copy the complete Cookie request-header value from an
+  authenticated `ubereats.com` request.
+- **`uev2.id.session` is missing:** Copy the complete Cookie header, not an
+  individual cookie from browser storage.
+- **Uber rejected the session:** Return to Uber Eats and confirm you are still
+  signed in. If needed, sign out and back in, reload the page, copy a fresh
+  Cookie header, and try again.
+
+Use **Reconfigure** on the config entry to replace credentials proactively.
+When the integration confirms that authentication has expired, Home Assistant
+starts its reauthentication flow and asks for a fresh Cookie header.
+
+### Cookie security
+
+Treat the Cookie header like a password: it represents your signed-in Uber Eats
+browser session. Do not share it, post it in GitHub issues, include it in
+screenshots or logs, or send it in support messages. Simple Uber Eats never
+needs your Uber password or two-factor authentication code.
 
 ## Recorder note
 

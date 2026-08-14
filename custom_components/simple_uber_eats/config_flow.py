@@ -30,6 +30,8 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_CONFIRM_IMPORT = "confirm_import"
 CONF_LEGACY_SELECTION = "legacy_entry"
+UBER_EATS_HOST = "www.ubereats.com"
+UBER_EATS_URL = "https://www.ubereats.com/"
 
 
 async def _probe_active_orders(
@@ -292,6 +294,10 @@ class UberEatsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
+            description_placeholders={
+                "uber_eats_host": UBER_EATS_HOST,
+                "uber_eats_url": UBER_EATS_URL,
+            },
         )
 
     async def async_step_reconfigure(
@@ -339,5 +345,8 @@ class UberEatsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id=step_id,
             data_schema=vol.Schema({vol.Required(CONF_COOKIE): str}),
             errors=errors,
-            description_placeholders={"account_name": entry.data[CONF_ACCOUNT_NAME]},
+            description_placeholders={
+                "account_name": entry.data[CONF_ACCOUNT_NAME],
+                "uber_eats_url": UBER_EATS_URL,
+            },
         )

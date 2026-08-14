@@ -2,15 +2,15 @@
   "config": {
     "step": {
       "user": {
-        "title": "Simple Uber Eats",
-        "description": "Add an Uber Eats account using a signed-in browser session.",
+        "title": "Authentication",
+        "description": "Simple Uber Eats connects using the browser session of an Uber Eats account that is already signed in. Your Uber password is never requested.\n\n### 1. Sign in to Uber Eats\n\n1. On a desktop computer, open [Uber Eats]({uber_eats_url}).\n2. Sign in to the Uber Eats account you want to connect.\n3. Make sure Uber Eats is fully loaded and you can see that you are signed in.\n4. Keep this tab open.\n\n### 2. Open your browser's developer tools\n\n**Chrome, Edge, Brave, or another Chromium browser**\n\n1. Press **F12** or **Ctrl+Shift+I**. On macOS, press **Option+Command+I**.\n2. Select the **Network** tab.\n3. Keep Developer Tools open and reload the Uber Eats page.\n4. In the Network filter box, enter `getActiveOrdersV1`.\n5. Click the request named **getActiveOrdersV1**.\n\nIf that request does not appear, clear the filter, reload the page again, and look for a request to **{uber_eats_host}** named `getUserV1`.\n\n6. Open the **Headers** tab for that request.\n7. Scroll to **Request Headers**.\n8. Find the header named **Cookie**.\n9. Copy the COMPLETE value of the Cookie header.\n\nIf Chrome shows abbreviated or formatted headers and the complete value is not easy to copy, use **view source** for Request Headers.\n\n**Firefox**\n\n1. Press **F12** or **Ctrl+Shift+I**. On macOS, press **Option+Command+I**.\n2. Select **Network**.\n3. Reload the Uber Eats page.\n4. Filter for `getActiveOrdersV1`.\n5. Select that request.\n6. Open **Headers**.\n7. Expand **Request Headers**.\n8. Find **Cookie** and copy its COMPLETE value.\n9. If necessary, use the **Raw** view to see the unformatted header.\n\n**Safari on macOS**\n\nIf the Develop menu is not visible:\n\n1. Open **Safari → Settings → Advanced**.\n2. Enable **Show features for web developers**.\n\nThen:\n\n1. Open the signed-in Uber Eats page.\n2. Choose **Develop → Show Web Inspector**.\n3. Open the **Network** tab.\n4. Reload Uber Eats.\n5. Find `getActiveOrdersV1`.\n6. Select the request and inspect its request headers.\n7. Find **Cookie** and copy its COMPLETE value.\n\n### 3. Paste the Cookie header below\n\nPaste ONLY the value of the Cookie header.\n\nFor example, the field should look conceptually like:\n\n`cookie1=value1; cookie2=value2; cookie3=value3; ...`\n\nDo NOT include `Cookie:`. Do NOT add quotation marks. Do NOT copy only one individual cookie.\n\nThe complete value should contain, among other cookies, `sid=...` and `uev2.id.session=...`. Simple Uber Eats will validate the session before saving the account.\n\n### Security\n\nTreat this Cookie value like a password. It represents your signed-in Uber Eats browser session.\n\nDo not:\n\n- share it with anyone\n- post it in GitHub issues\n- include it in screenshots\n- paste it into logs\n- send it in support messages\n\nSimple Uber Eats only needs the Cookie header; it does NOT need your Uber email, password, or two-factor authentication code.\n\n### If it does not work\n\n**I cannot find `getActiveOrdersV1`**\n\n- Make sure Developer Tools was open before you reloaded the page.\n- Make sure the **Network** tab is recording requests.\n- Reload Uber Eats again.\n- Confirm you are signed in.\n- Clear the Network filter and look for `getUserV1` or another request made directly to `{uber_eats_host}`.\n\n**The integration says `sid` is missing**\n\nYou probably copied only part of the Cookie header or selected the wrong request. Copy the COMPLETE Cookie request header from an authenticated {uber_eats_host} request.\n\n**The integration says `uev2.id.session` is missing**\n\nAgain, copy the COMPLETE Cookie header rather than an individual cookie.\n\n**Uber Eats did not accept the browser session**\n\n1. Return to Uber Eats.\n2. Confirm you are still signed in.\n3. If necessary, sign out and sign back in.\n4. Reload the page.\n5. Copy a fresh Cookie request header.\n6. Try again.",
         "data": {
           "time_zone": "Time zone",
-          "cookie": "Browser cookie header"
+          "cookie": "Uber Eats Cookie header"
         },
         "data_description": {
-          "time_zone": "Use the same time zone configured in Home Assistant.",
-          "cookie": "While signed in at ubereats.com, copy the complete Cookie request header from your browser's developer tools."
+          "time_zone": "This must match Home Assistant's configured time zone. The correct value is selected automatically; normally you should not change it.",
+          "cookie": "Paste the complete Cookie request-header value from the signed-in Uber Eats browser tab."
         }
       },
       "legacy_select": {
@@ -29,22 +29,22 @@
       },
       "reconfigure": {
         "title": "Update Uber Eats credentials",
-        "description": "Replace the browser session for {account_name}.",
+        "description": "Replace the browser session for {account_name}.\n\n1. Sign in to [Uber Eats]({uber_eats_url}).\n2. Open Developer Tools → **Network**. In Chrome, Edge, Brave, Chromium, or Firefox, press **F12** or **Ctrl+Shift+I**; on macOS use **Option+Command+I**. In Safari, choose **Develop → Show Web Inspector → Network**.\n3. Reload the page.\n4. Filter for `getActiveOrdersV1`.\n5. Open the request, then **Headers → Request Headers**.\n6. Copy the complete **Cookie** value.\n7. Paste only the value below, without the `Cookie:` label.\n\nTreat the Cookie header like a password.",
         "data": {
-          "cookie": "Browser cookie header"
+          "cookie": "Uber Eats Cookie header"
         },
         "data_description": {
-          "cookie": "Copy a current Cookie request header from a signed-in ubereats.com browser tab."
+          "cookie": "Paste the complete Cookie request-header value from the signed-in Uber Eats browser tab."
         }
       },
       "reauth_confirm": {
         "title": "Reconnect Uber Eats",
-        "description": "The saved session for {account_name} is no longer accepted. Enter a current browser cookie header.",
+        "description": "The saved session for {account_name} is no longer accepted. Obtain a fresh Cookie header:\n\n1. Sign in to [Uber Eats]({uber_eats_url}).\n2. Open Developer Tools → **Network**. In Chrome, Edge, Brave, Chromium, or Firefox, press **F12** or **Ctrl+Shift+I**; on macOS use **Option+Command+I**. In Safari, choose **Develop → Show Web Inspector → Network**.\n3. Reload the page.\n4. Filter for `getActiveOrdersV1`.\n5. Open the request, then **Headers → Request Headers**.\n6. Copy the complete **Cookie** value.\n7. Paste only the value below, without the `Cookie:` label.\n\nTreat the Cookie header like a password.",
         "data": {
-          "cookie": "Browser cookie header"
+          "cookie": "Uber Eats Cookie header"
         },
         "data_description": {
-          "cookie": "Copy a current Cookie request header from a signed-in ubereats.com browser tab."
+          "cookie": "Paste the complete Cookie request-header value from the signed-in Uber Eats browser tab."
         }
       }
     },
