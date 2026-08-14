@@ -6,6 +6,8 @@
 
 A lightweight Home Assistant custom integration for tracking active Uber Eats orders using native Home Assistant entities.
 
+![Simple Uber Eats in Home Assistant](docs/images/simple-uber-eats-overview.png)
+
 ## Overview
 
 Simple Uber Eats is designed around Home Assistant's native entity model. It has no custom sidebar panel, custom Lovelace frontend, built-in TTS, or order-history database/UI. Current order data is exposed through standard sensors, binary sensors, and a device tracker so it can be used with normal dashboards and automations.
@@ -66,14 +68,84 @@ authoritative value remains available in the `arrival_time` attribute.
 Dashboards can calculate a local countdown from this timestamp if desired.
 
 Fresh installations display the retained entities as **Restaurant**,
-**Courier**, and **ETA**. Their released unique IDs remain stable. During a 2.x
-import, Home Assistant's public registry migration API preserves existing entity
-IDs and user registry settings when the legacy entities are unloaded. If that
-safe migration is unavailable, Home Assistant creates new-domain registry
-entries instead; users can manually rename those entity IDs after removing the
-old integration.
+**Courier**, and **ETA**. Their released unique IDs remain stable.
 
 For accounts with multiple simultaneous orders, the entities represent the first active order returned by Uber. Each config entry has its own independent entity set.
+
+## Optional real-time ETA countdown
+
+Simple Uber Eats exposes ETA as a stable Home Assistant timestamp, for example
+`sensor.YOUR_ACCOUNT_uber_eats_eta`. The integration itself does not count down
+every second. If you want a live minutes-and-seconds display, install
+[`custom:button-card`](https://github.com/custom-cards/button-card) and let the
+dashboard calculate the countdown locally.
+
+![Real-time ETA countdown example](docs/images/eta-countdown-example.png)
+
+Replace `sensor.YOUR_ACCOUNT_uber_eats_eta` with the ETA entity created for your
+account:
+
+```yaml
+type: custom:button-card
+entity: sensor.YOUR_ACCOUNT_uber_eats_eta
+show_icon: false
+show_name: false
+show_state: false
+show_label: true
+update_timer: 1000
+
+label: |
+  [[[
+    const etaSensor =
+      states['sensor.YOUR_ACCOUNT_uber_eats_eta'];
+
+    if (!etaSensor) {
+      return 'No order';
+    }
+
+    const etaStr = etaSensor.state;
+
+    if (
+      !etaStr ||
+      etaStr === 'unknown' ||
+      etaStr === 'unavailable'
+    ) {
+      return 'No order';
+    }
+
+    const target = new Date(etaStr);
+    const now = new Date();
+
+    if (isNaN(target.getTime())) {
+      return 'ETA: --:--';
+    }
+
+    const diff = Math.floor((target - now) / 1000);
+
+    if (diff <= 0) {
+      return 'ETA: Arriving';
+    }
+
+    const totalMinutes = Math.floor(diff / 60);
+    const seconds = diff % 60;
+
+    return `ETA: ${totalMinutes}:${String(seconds).padStart(2, '0')}`;
+  ]]]
+
+styles:
+  card:
+    - background: none
+    - box-shadow: none
+    - border: none
+    - padding: 0px
+  label:
+    - font-size: 80px
+    - font-weight: 600
+```
+
+`update_timer: 1000` refreshes this card in the browser approximately once per
+second. It does not make Simple Uber Eats emit a Home Assistant
+`state_changed` event every second, and it does not add Uber API requests.
 
 ## Smooth courier tracking
 
@@ -130,36 +202,6 @@ Simple Uber Eats 3.0 requires Home Assistant 2026.8 or newer.
 2. Copy `custom_components/simple_uber_eats/` into Home Assistant's `/config/custom_components/` directory.
 3. Restart Home Assistant.
 4. Add **Simple Uber Eats** from **Settings → Devices & services**.
-
-## Upgrading from 2.x
-
-Version 3.0 changes the Home Assistant integration domain from `uber_eats` to
-`simple_uber_eats`. It creates a new config entry because Home Assistant does
-not support changing the domain of an existing entry in place.
-
-1. Install or update to Simple Uber Eats 3.0 and restart Home Assistant.
-2. Do not delete the legacy `uber_eats` config entry yet.
-3. Add **Simple Uber Eats** from **Settings → Devices & services**.
-4. Select the detected legacy account, confirm the import, and let the saved
-   session pass the normal active-order and profile validation.
-5. Verify the new `simple_uber_eats` entry and its entities.
-6. Remove the legacy `uber_eats` config entry only after verification.
-7. Remove an obsolete `/config/custom_components/uber_eats/` directory if it
-   still exists, then restart Home Assistant.
-
-The import copies only the account name, timezone, required session/cookie
-fields, and existing options. It never shows the saved cookie in the flow and
-does not automatically delete the legacy entry. Multiple legacy accounts are
-presented for explicit selection and can be imported one at a time.
-
-When the old entities are not loaded, Home Assistant 2026.8's public entity and
-device registry APIs can move them to the new integration while preserving the
-entity ID, user name, disabled state, icon, unique ID, and device association.
-If the old integration is still loaded or registry ownership is ambiguous, the
-safe migration is skipped and new registry entries are created. In that case,
-remove the old integration after verifying 3.0 and manually rename the new
-entity IDs if dashboards or automations need the previous names. Simple Uber
-Eats never edits `.storage` or mutates config-entry domains.
 
 ## Authentication
 
