@@ -1,0 +1,13 @@
+{
+  "domain": "simple_uber_eats",
+  "name": "Simple Uber Eats",
+  "codeowners": ["@alfredolvera"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/alfredolvera/simple-uber-eats",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/alfredolvera/simple-uber-eats/issues",
+  "requirements": [],
+  "version": "3.0.0"
+}

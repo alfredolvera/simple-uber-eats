@@ -1,0 +1,98 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Simple Uber Eats",
+        "description": "Add an Uber Eats account using a signed-in browser session.",
+        "data": {
+          "time_zone": "Time zone",
+          "cookie": "Browser cookie header"
+        },
+        "data_description": {
+          "time_zone": "Use the same time zone configured in Home Assistant.",
+          "cookie": "While signed in at ubereats.com, copy the complete Cookie request header from your browser's developer tools."
+        }
+      },
+      "legacy_select": {
+        "title": "Choose an existing Uber Eats account",
+        "description": "Multiple legacy Uber Eats configurations were found. Choose the account to import into Simple Uber Eats.",
+        "data": {
+          "legacy_entry": "Existing account"
+        }
+      },
+      "legacy_import": {
+        "title": "Import existing Uber Eats configuration",
+        "description": "An existing configuration for {account_name} was found. Import it into Simple Uber Eats? Credentials are validated without being displayed, and the legacy entry is not removed.",
+        "data": {
+          "confirm_import": "Import this account"
+        }
+      },
+      "reconfigure": {
+        "title": "Update Uber Eats credentials",
+        "description": "Replace the browser session for {account_name}.",
+        "data": {
+          "cookie": "Browser cookie header"
+        },
+        "data_description": {
+          "cookie": "Copy a current Cookie request header from a signed-in ubereats.com browser tab."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Reconnect Uber Eats",
+        "description": "The saved session for {account_name} is no longer accepted. Enter a current browser cookie header.",
+        "data": {
+          "cookie": "Browser cookie header"
+        },
+        "data_description": {
+          "cookie": "Copy a current Cookie request header from a signed-in ubereats.com browser tab."
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "This Uber Eats account is already configured.",
+      "legacy_entry_unavailable": "The selected legacy Uber Eats configuration is no longer available.",
+      "reauth_successful": "The Uber Eats account was reconnected.",
+      "reconfigure_successful": "The Uber Eats credentials were updated."
+    },
+    "error": {
+      "cookie_too_short": "Enter the complete Cookie request header.",
+      "sid_not_found": "The cookie header does not contain an sid credential.",
+      "invalid_sid": "The sid credential is not in the expected Uber session format.",
+      "session_not_found": "The cookie header does not contain uev2.id.session.",
+      "invalid_session": "The uev2.id.session credential is not in the expected format.",
+      "invalid_time_zone": "Choose the time zone currently used by Home Assistant.",
+      "invalid_credentials": "Uber Eats did not accept this browser session.",
+      "legacy_entry_unavailable": "Choose an available legacy Uber Eats configuration.",
+      "legacy_invalid_credentials": "Uber Eats did not accept the saved legacy session. Skip the import and enter a current browser cookie if needed."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "account_connected": {
+        "name": "Account connected"
+      },
+      "active_order": {
+        "name": "Active order"
+      }
+    },
+    "sensor": {
+      "order_status": {
+        "name": "Order status"
+      },
+      "eta": {
+        "name": "ETA"
+      },
+      "restaurant": {
+        "name": "Restaurant"
+      },
+      "courier": {
+        "name": "Courier"
+      }
+    },
+    "device_tracker": {
+      "courier_tracker": {
+        "name": "Courier"
+      }
+    }
+  }
+}

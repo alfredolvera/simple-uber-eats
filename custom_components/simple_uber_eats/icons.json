@@ -1,0 +1,43 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "account_connected": {
+        "default": "mdi:cloud-off-outline",
+        "state": {
+          "on": "mdi:cloud-check"
+        }
+      },
+      "active_order": {
+        "default": "mdi:food-takeout-box-outline",
+        "state": {
+          "on": "mdi:food-takeout-box"
+        }
+      }
+    },
+    "sensor": {
+      "order_status": {
+        "default": "mdi:progress-question",
+        "state": {
+          "preparing": "mdi:chef-hat",
+          "arriving": "mdi:map-marker-radius",
+          "delivered": "mdi:check-circle",
+          "unknown": "mdi:progress-question"
+        }
+      },
+      "eta": {
+        "default": "mdi:timer-outline"
+      },
+      "restaurant": {
+        "default": "mdi:storefront-outline"
+      },
+      "courier": {
+        "default": "mdi:moped"
+      }
+    },
+    "device_tracker": {
+      "courier_tracker": {
+        "default": "mdi:moped"
+      }
+    }
+  }
+}

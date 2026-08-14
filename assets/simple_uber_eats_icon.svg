@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title description">
+  <title id="title">Simple Uber Eats project icon</title>
+  <desc id="description">A bright green delivery bag with a white letter S and motion marks on a charcoal square.</desc>
+
+  <!-- Original project artwork built entirely from basic vector shapes. -->
+  <rect width="512" height="512" rx="96" fill="#171A1B"/>
+
+  <!-- Motion marks remain distinct when the artwork is reduced to icon size. -->
+  <path d="M76 226h54" fill="none" stroke="#8AF0AE" stroke-width="18" stroke-linecap="round"/>
+  <path d="M58 286h72" fill="none" stroke="#55E58A" stroke-width="18" stroke-linecap="round"/>
+  <path d="M82 346h48" fill="none" stroke="#31D975" stroke-width="18" stroke-linecap="round"/>
+
+  <!-- Bag handle and body. -->
+  <path d="M216 176v-18c0-38 27-66 64-66s64 28 64 66v18"
+        fill="none" stroke="#55E58A" stroke-width="28" stroke-linecap="round"/>
+  <path d="M158 170h244c13 0 23 10 23 23l-13 220c-1 13-11 23-24 23H172c-13 0-23-10-24-23l-13-220c0-13 10-23 23-23z"
+        fill="#36DE7A"/>
+  <path d="M145 216h270" fill="none" stroke="#28C968" stroke-width="16"/>
+
+  <!-- Letterform is a vector path, not a font or external glyph. -->
+  <path d="M337 263c-9-24-30-38-58-38-31 0-54 16-54 39 0 22 18 31 57 39 42 8 64 24 64 58 0 38-31 64-74 64-39 0-69-19-81-51"
+        fill="none" stroke="#FFFFFF" stroke-width="31" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
