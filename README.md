@@ -17,7 +17,7 @@ This integration is unofficial and uses Uber's web endpoints rather than a publi
 - Account connectivity monitoring
 - Active-order detection
 - Uber's visible order status text, with a deterministic fallback
-- Local `MM:SS` ETA countdown with authoritative arrival-time metadata
+- Authoritative timezone-aware ETA timestamp without per-second state writes
 - Restaurant coordinates for direct use in the native Map card
 - Restaurant and courier entities with clean display names
 - Native courier `device_tracker`
@@ -40,7 +40,7 @@ This integration is unofficial and uses Uber's web endpoints rather than a publi
 | Account connected | `binary_sensor` | Distinguishes a successful connection, confirmed authentication failure, and temporary unavailability |
 | Active order | `binary_sensor` | Indicates whether Uber currently reports an active order |
 | Order status | `sensor` | Uber's visible status text for the primary active order |
-| ETA | `sensor` | Local `MM:SS` countdown to the authoritative ETA |
+| ETA | `sensor` | Estimated arrival timestamp reported by Uber |
 | Restaurant | `sensor` | Restaurant name with active latitude/longitude attributes |
 | Courier | `sensor` | Assigned courier name |
 | Courier | `device_tracker` | Latest displayed courier position for Home Assistant maps |
@@ -59,11 +59,11 @@ If visible wording is absent, the deterministic fallback values are:
 
 Completion is authoritative when Uber no longer returns an active order.
 
-The ETA state is a text countdown such as `12:47`, `01:03`, or `00:00`.
-`arrival_time` retains the timezone-aware parsed Uber ETA and
-`seconds_remaining` provides a non-negative machine-readable value. The local
-clock freezes at `00:00` until Uber supplies a newer ETA or the order completes.
-It never increases Uber's request frequency.
+The ETA state is Uber's timezone-aware estimated arrival timestamp. It updates
+only when the coordinator receives new order data; the integration does not
+run a per-second ETA timer or publish per-second ETA state changes. The same
+authoritative value remains available in the `arrival_time` attribute.
+Dashboards can calculate a local countdown from this timestamp if desired.
 
 Fresh installations display the retained entities as **Restaurant**,
 **Courier**, and **ETA**. Their released unique IDs remain stable. During a 2.x
@@ -272,21 +272,13 @@ browser session. Do not share it, post it in GitHub issues, include it in
 screenshots or logs, or send it in support messages. Simple Uber Eats never
 needs your Uber password or two-factor authentication code.
 
-## Recorder note
-
-While an order is active, the courier tracker and ETA countdown can update
-approximately once per second. This can create high-resolution history in
-Recorder. Users who do not want it can exclude those entities in their own
-Recorder configuration. Simple Uber Eats does not alter Recorder settings
-automatically.
-
 ## Troubleshooting
 
 - **Account connected is unavailable:** Home Assistant has not received a conclusive response, or a temporary network, rate-limit, or server problem occurred. This is not the same as invalid credentials.
 - **Account connected is off:** Authentication has been conclusively rejected. Complete the reauthentication flow with a fresh browser cookie string.
 - **Courier tracker is idle:** An order may not yet have an assigned courier or usable courier telemetry.
 - **Courier marker stops moving:** The tracker does not extrapolate. It freezes when real telemetry runs out and resumes when new real points arrive.
-- **ETA remains at `00:00`:** The parsed ETA has passed. The countdown waits for a newer authoritative Uber ETA or order completion.
+- **ETA is unavailable:** Uber has not supplied a valid ETA, or the reported time falls outside the bounded plausible delivery window. The entity updates when newer coordinator data arrives.
 - **More detail is needed:** Open the integration's config entry in **Settings → Devices & services**, select the menu, and download diagnostics. The diagnostic payload includes sanitized polling and tracking telemetry without authentication secrets or raw courier coordinates.
 
 ## Privacy and security

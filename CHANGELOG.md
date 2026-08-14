@@ -1,5 +1,14 @@
 # Changelog
 
+## [3.0.1]
+
+### Fixed
+
+- Restored the ETA sensor state to Uber's authoritative timezone-aware arrival timestamp and removed the entity-owned one-second countdown task.
+- Eliminated per-second ETA `async_write_ha_state()` calls that produced excessive Home Assistant Activity and `state_changed` events.
+- Preserved the corrected five-minute recent-past tolerance, twelve-hour plausible-future bound, midnight rollover, final-time range selection, and rejection of implausible ETA values.
+- Removed the per-second `seconds_remaining` attribute while retaining the authoritative `arrival_time` attribute.
+
 ## [3.0.0]
 
 ### Highlights
@@ -27,7 +36,7 @@ Simple Uber Eats and confirm the detected legacy-account import before removing
 the old entry. When public registry migration cannot safely run, new entity
 registry entries are created and existing users may need to rename entity IDs.
 
-In 2.x the ETA sensor state was a timestamp. In 3.0 its state is countdown text
+In 2.x the ETA sensor state was a timestamp. In 3.0.0 its state is countdown text
 in `MM:SS` form. Dashboards, templates, or automations that treated the ETA
 state as a timestamp must use the `arrival_time` attribute or be adjusted for
 the new countdown state.

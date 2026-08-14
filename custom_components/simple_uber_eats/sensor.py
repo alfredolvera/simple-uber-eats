@@ -1,24 +1,17 @@
 """Native sensors for the primary active Uber Eats order."""
 from __future__ import annotations
 
-import asyncio
 from datetime import datetime
-import time
 from typing import Any
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import dt as dt_util
 
 from .const import CONF_ACCOUNT_NAME, DOMAIN
 from .entity import UberEatsCoordinatorEntity
-from .eta_countdown import CountdownClock, format_countdown
 from .presentation import order_count_attributes, primary_order, restaurant_attributes
-from .protocol import CONNECTION_CONNECTED
-
-COUNTDOWN_INTERVAL_SECONDS = 1.0
 
 
 def _primary_order(coordinator) -> dict[str, Any] | None:
@@ -81,124 +74,27 @@ class UberEatsOrderStatus(UberEatsSensorEntity):
 
 
 class UberEatsETA(UberEatsSensorEntity):
-    """Locally count down to the primary order's authoritative ETA."""
+    """Expose the primary order's authoritative arrival timestamp."""
 
     _attr_translation_key = "eta"
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
 
     def __init__(self, coordinator, account_name: str, entry_id: str) -> None:
         super().__init__(coordinator, account_name, entry_id, "driver_eta")
-        self._clock = CountdownClock()
-        self._seconds_remaining: int | None = None
-        self._countdown_task: asyncio.Task[None] | None = None
-        self._generation = 0
-        self._removed = False
-
-    async def async_added_to_hass(self) -> None:
-        """Initialize from coordinator data after registration."""
-        await super().async_added_to_hass()
-        self._ingest_eta()
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Cancel the local timer before unload or config-entry reload."""
-        self._removed = True
-        self._generation += 1
-        task = self._cancel_countdown()
-        if task is not None:
-            try:
-                await task
-            except asyncio.CancelledError:
-                pass
-        await super().async_will_remove_from_hass()
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Rebase from cached coordinator data without requesting Uber."""
-        self._ingest_eta()
-        super()._handle_coordinator_update()
-
-    def _ingest_eta(self) -> None:
-        order = _primary_order(self.coordinator)
-        if (
-            order is None
-            and self._clock.arrival_time is not None
-            and self.coordinator.connection_state != CONNECTION_CONNECTED
-        ):
-            if self._seconds_remaining and self._seconds_remaining > 0:
-                self._ensure_countdown()
-            return
-        arrival = order.get("driver_eta") if order else None
-        if not isinstance(arrival, datetime) or arrival.tzinfo is None:
-            self._clear_countdown()
-            return
-
-        self._seconds_remaining = self._clock.rebase(
-            arrival,
-            wall_now=dt_util.now(),
-            monotonic_now=time.monotonic(),
-        )
-        if self._seconds_remaining > 0:
-            self._ensure_countdown()
-        else:
-            self._cancel_countdown()
-
-    def _clear_countdown(self) -> None:
-        self._generation += 1
-        self._cancel_countdown()
-        self._clock.clear()
-        self._seconds_remaining = None
-
-    def _ensure_countdown(self) -> None:
-        if self._removed or (
-            self._countdown_task is not None and not self._countdown_task.done()
-        ):
-            return
-        generation = self._generation
-        self._countdown_task = self.hass.async_create_task(
-            self._async_countdown_loop(generation),
-            name=f"simple_uber_eats_eta_countdown_{self.unique_id}",
-        )
-
-    def _cancel_countdown(self) -> asyncio.Task[None] | None:
-        task = self._countdown_task
-        self._countdown_task = None
-        if task is not None and not task.done():
-            task.cancel()
-            return task
-        return None
-
-    async def _async_countdown_loop(self, generation: int) -> None:
-        current_task = asyncio.current_task()
-        try:
-            while not self._removed and generation == self._generation:
-                await asyncio.sleep(COUNTDOWN_INTERVAL_SECONDS)
-                remaining = self._clock.remaining(time.monotonic())
-                if remaining is None:
-                    return
-                if remaining != self._seconds_remaining:
-                    self._seconds_remaining = remaining
-                    if not self._removed and generation == self._generation:
-                        self.async_write_ha_state()
-                if remaining == 0:
-                    return
-        except asyncio.CancelledError:
-            raise
-        finally:
-            if self._countdown_task is current_task:
-                self._countdown_task = None
 
     @property
-    def native_value(self) -> str | None:
-        if self._seconds_remaining is None:
+    def native_value(self) -> datetime | None:
+        order = _primary_order(self.coordinator)
+        arrival = order.get("driver_eta") if order else None
+        if not isinstance(arrival, datetime) or arrival.tzinfo is None:
             return None
-        return format_countdown(self._seconds_remaining)
+        return arrival
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         attrs: dict[str, Any] = _active_orders_attribute(self.coordinator)
-        if self._clock.arrival_time is not None:
-            attrs["arrival_time"] = self._clock.arrival_time
-        if self._seconds_remaining is not None:
-            attrs["seconds_remaining"] = self._seconds_remaining
+        if (arrival := self.native_value) is not None:
+            attrs["arrival_time"] = arrival
         return attrs
 
 
