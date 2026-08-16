@@ -3,11 +3,13 @@ from __future__ import annotations
 
 import logging
 from collections import Counter
+from dataclasses import dataclass
 from typing import Any, Mapping
 
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import UberEatsApiClient
@@ -22,7 +24,12 @@ from .const import (
     DOMAIN,
     LEGACY_DOMAIN,
 )
-from .parsers import MalformedUberResponse, parse_profile, raw_active_orders
+from .parsers import (
+    MalformedUberResponse,
+    auth_error_code,
+    parse_profile,
+    raw_active_orders,
+)
 from .protocol import CookieValidationError, SessionCredentials
 from .timezones import selectable_time_zones
 
@@ -30,43 +37,90 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_CONFIRM_IMPORT = "confirm_import"
 CONF_LEGACY_SELECTION = "legacy_entry"
-UBER_EATS_HOST = "www.ubereats.com"
 UBER_EATS_URL = "https://www.ubereats.com/"
 
 
-async def _probe_active_orders(
-    hass, credentials: SessionCredentials, time_zone: str
-) -> bool:
+class CredentialProbeUnavailable(Exception):
+    """Credential validation could not reach a conclusive result."""
+
+
+class CredentialProbeRejected(Exception):
+    """Uber conclusively rejected the submitted credentials."""
+
+
+@dataclass(frozen=True, slots=True)
+class CredentialValidationResult:
+    """Successful validation data and the final server-rotated credentials."""
+
+    credentials: SessionCredentials
+    profile: dict[str, Any] | None
+
+
+async def _probe_active_orders(client: UberEatsApiClient) -> None:
     """Validate credentials using the normal active-order operation."""
-    client = UberEatsApiClient(async_get_clientsession(hass), credentials, time_zone)
     response = await client.active_orders()
+    if response.status in (401, 403):
+        raise CredentialProbeRejected
     if response.status != 200:
-        return False
+        raise CredentialProbeUnavailable
+    if auth_error_code(response.body):
+        raise CredentialProbeRejected
     try:
         raw_active_orders(response.body)
-    except MalformedUberResponse:
-        return False
-    return True
+    except MalformedUberResponse as err:
+        raise CredentialProbeUnavailable from err
 
 
-async def _probe_profile(
-    hass, credentials: SessionCredentials, time_zone: str
-) -> dict[str, Any] | None:
+async def _probe_profile(client: UberEatsApiClient) -> dict[str, Any]:
     """Read identity data used to title a newly created entry."""
-    client = UberEatsApiClient(async_get_clientsession(hass), credentials, time_zone)
     response = await client.user_profile()
-    return (
-        parse_profile(response.body, require_logged_in=True)
-        if response.status == 200
-        else None
+    if response.status in (401, 403):
+        raise CredentialProbeRejected
+    if response.status != 200:
+        raise CredentialProbeUnavailable
+    if auth_error_code(response.body):
+        raise CredentialProbeRejected
+    profile = parse_profile(response.body, require_logged_in=True)
+    if profile is not None:
+        return profile
+    data = response.body.get("data") if isinstance(response.body, dict) else None
+    if isinstance(data, dict) and data.get("isLoggedIn") is False:
+        raise CredentialProbeRejected
+    raise CredentialProbeUnavailable
+
+
+async def _validate_credentials(
+    hass,
+    credentials: SessionCredentials,
+    time_zone: str,
+    *,
+    include_profile: bool,
+) -> CredentialValidationResult:
+    """Validate with one client so every Set-Cookie rotation is retained."""
+    client = UberEatsApiClient(
+        async_get_clientsession(hass), credentials, time_zone
     )
+    await _probe_active_orders(client)
+    profile = await _probe_profile(client) if include_profile else None
+    return CredentialValidationResult(client.credentials, profile)
 
 
-def _cookie_credentials(raw: str) -> tuple[SessionCredentials | None, str | None]:
+def _session_credentials(raw: str) -> tuple[SessionCredentials | None, str | None]:
     try:
-        return SessionCredentials.from_cookie_header(raw), None
+        return SessionCredentials.from_authentication_input(raw), None
     except CookieValidationError as err:
         return None, err.translation_key
+
+
+def _session_input_selector() -> selector.TextSelector:
+    """Return a reliable multiline field for sensitive copied request text."""
+    return selector.TextSelector(
+        selector.TextSelectorConfig(
+            autocomplete="off",
+            multiline=True,
+            type=selector.TextSelectorType.TEXT,
+        )
+    )
 
 
 class UberEatsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -106,10 +160,18 @@ class UberEatsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             candidates, key=lambda entry: (entry.title.casefold(), entry.entry_id)
         )
 
-    def _current_credentials_exist(self, credentials: SessionCredentials) -> bool:
+    def _current_credentials_exist(
+        self,
+        credentials: SessionCredentials,
+        *,
+        exclude_entry_id: str | None = None,
+    ) -> bool:
         return any(
-            entry.data.get(CONF_SID) == credentials.sid
-            or entry.data.get(CONF_SESSION_ID) == credentials.session_id
+            entry.entry_id != exclude_entry_id
+            and (
+                entry.data.get(CONF_SID) == credentials.sid
+                or entry.data.get(CONF_SESSION_ID) == credentials.session_id
+            )
             for entry in self.hass.config_entries.async_entries(DOMAIN)
         )
 
@@ -198,28 +260,38 @@ class UberEatsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         time_zone = legacy_entry.data.get(CONF_TIME_ZONE, configured_time_zone)
         if not isinstance(time_zone, str):
             time_zone = configured_time_zone
-        valid = False
-        profile = None
+        validation: CredentialValidationResult | None = None
+        validation_error = "legacy_invalid_credentials"
         if credentials is not None and not self._current_credentials_exist(credentials):
             try:
-                valid = await _probe_active_orders(self.hass, credentials, time_zone)
-                profile = (
-                    await _probe_profile(self.hass, credentials, time_zone)
-                    if valid
-                    else None
+                validation = await _validate_credentials(
+                    self.hass,
+                    credentials,
+                    time_zone,
+                    include_profile=True,
                 )
+            except CredentialProbeRejected:
+                pass
             except Exception as err:
-                _LOGGER.debug("Legacy credential probe failed: %s", type(err).__name__)
-        if not valid or profile is None or credentials is None:
+                validation_error = "cannot_connect"
+                _LOGGER.debug(
+                    "Legacy credential probe temporarily unavailable: %s",
+                    type(err).__name__,
+                )
+        if validation is None or validation.profile is None:
             return self.async_show_form(
                 step_id="legacy_import",
                 data_schema=vol.Schema(
                     {vol.Required(CONF_CONFIRM_IMPORT, default=True): bool}
                 ),
-                errors={"base": "legacy_invalid_credentials"},
+                errors={"base": validation_error},
                 description_placeholders={"account_name": legacy_entry.title},
             )
 
+        credentials = validation.credentials
+        if self._current_credentials_exist(credentials):
+            return self.async_abort(reason="already_configured")
+        profile = validation.profile
         profile_title = " ".join(
             part for part in (profile["first_name"], profile["last_name"]) if part
         )
@@ -245,44 +317,53 @@ class UberEatsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         configured_time_zone = self.hass.config.time_zone or "UTC"
         if user_input is not None:
             selected_time_zone = user_input.get(CONF_TIME_ZONE, configured_time_zone)
-            raw_cookie = user_input.get(CONF_COOKIE, "").strip()
+            raw_session = user_input.get(CONF_COOKIE, "")
             if selected_time_zone != configured_time_zone:
                 errors[CONF_TIME_ZONE] = "invalid_time_zone"
-            credentials, cookie_error = _cookie_credentials(raw_cookie)
-            if cookie_error:
-                errors[CONF_COOKIE] = cookie_error
+            credentials, session_error = _session_credentials(raw_session)
+            if session_error:
+                errors[CONF_COOKIE] = session_error
             if not errors and credentials is not None:
                 try:
-                    valid = await _probe_active_orders(
-                        self.hass, credentials, configured_time_zone
+                    validation = await _validate_credentials(
+                        self.hass,
+                        credentials,
+                        configured_time_zone,
+                        include_profile=True,
                     )
-                    profile = (
-                        await _probe_profile(self.hass, credentials, configured_time_zone)
-                        if valid
-                        else None
-                    )
+                except CredentialProbeRejected:
+                    errors["base"] = "invalid_credentials"
                 except Exception as err:
-                    _LOGGER.debug("Credential probe failed: %s", type(err).__name__)
-                    valid, profile = False, None
-                if valid and profile is not None:
-                    if self._current_credentials_exist(credentials):
-                        return self.async_abort(reason="already_configured")
-                    title = " ".join(
-                        part
-                        for part in (profile["first_name"], profile["last_name"])
-                        if part
-                    ) or "Uber Eats Account"
-                    return self.async_create_entry(
-                        title=title,
-                        data={
-                            CONF_SID: credentials.sid,
-                            CONF_SESSION_ID: credentials.session_id,
-                            CONF_FULL_COOKIE: raw_cookie,
-                            CONF_ACCOUNT_NAME: title,
-                            CONF_TIME_ZONE: configured_time_zone,
-                        },
+                    _LOGGER.debug(
+                        "Credential probe temporarily unavailable: %s",
+                        type(err).__name__,
                     )
-                errors["base"] = "invalid_credentials"
+                    errors["base"] = "cannot_connect"
+                else:
+                    credentials = validation.credentials
+                    profile = validation.profile
+                    if profile is None:
+                        errors["base"] = "cannot_connect"
+                    elif self._current_credentials_exist(credentials):
+                        return self.async_abort(reason="already_configured")
+                    else:
+                        title = " ".join(
+                            part
+                            for part in (profile["first_name"], profile["last_name"])
+                            if part
+                        ) or "Uber Eats Account"
+                        return self.async_create_entry(
+                            title=title,
+                            data={
+                                CONF_SID: credentials.sid,
+                                CONF_SESSION_ID: credentials.session_id,
+                                CONF_FULL_COOKIE: credentials.header(),
+                                CONF_ACCOUNT_NAME: title,
+                                CONF_TIME_ZONE: configured_time_zone,
+                            },
+                        )
+                if "base" not in errors:
+                    errors["base"] = "invalid_credentials"
 
         zones = selectable_time_zones(configured_time_zone)
         return self.async_show_form(
@@ -290,12 +371,11 @@ class UberEatsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_TIME_ZONE, default=configured_time_zone): vol.In(zones),
-                    vol.Required(CONF_COOKIE): str,
+                    vol.Required(CONF_COOKIE): _session_input_selector(),
                 }
             ),
             errors=errors,
             description_placeholders={
-                "uber_eats_host": UBER_EATS_HOST,
                 "uber_eats_url": UBER_EATS_URL,
             },
         )
@@ -318,32 +398,49 @@ class UberEatsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_credential_update(self, step_id, entry, user_input) -> FlowResult:
         errors: dict[str, str] = {}
         if user_input is not None:
-            raw_cookie = user_input.get(CONF_COOKIE, "").strip()
-            credentials, cookie_error = _cookie_credentials(raw_cookie)
-            if cookie_error:
-                errors[CONF_COOKIE] = cookie_error
+            raw_session = user_input.get(CONF_COOKIE, "")
+            credentials, session_error = _session_credentials(raw_session)
+            if session_error:
+                errors[CONF_COOKIE] = session_error
             elif credentials is not None:
                 try:
-                    valid = await _probe_active_orders(
-                        self.hass, credentials, entry.data[CONF_TIME_ZONE]
+                    validation = await _validate_credentials(
+                        self.hass,
+                        credentials,
+                        entry.data[CONF_TIME_ZONE],
+                        include_profile=False,
                     )
+                except CredentialProbeRejected:
+                    errors["base"] = "invalid_credentials"
                 except Exception as err:
-                    _LOGGER.debug("Credential update probe failed: %s", type(err).__name__)
-                    valid = False
-                if valid:
-                    return self.async_update_reload_and_abort(
-                        entry,
-                        data={
-                            **entry.data,
-                            CONF_SID: credentials.sid,
-                            CONF_SESSION_ID: credentials.session_id,
-                            CONF_FULL_COOKIE: raw_cookie,
-                        },
+                    _LOGGER.debug(
+                        "Credential update probe temporarily unavailable: %s",
+                        type(err).__name__,
                     )
-                errors["base"] = "invalid_credentials"
+                    errors["base"] = "cannot_connect"
+                else:
+                    credentials = validation.credentials
+                    if self._current_credentials_exist(
+                        credentials, exclude_entry_id=entry.entry_id
+                    ):
+                        errors["base"] = "already_configured"
+                    else:
+                        return self.async_update_reload_and_abort(
+                            entry,
+                            data={
+                                **entry.data,
+                                CONF_SID: credentials.sid,
+                                CONF_SESSION_ID: credentials.session_id,
+                                CONF_FULL_COOKIE: credentials.header(),
+                            },
+                        )
+                if "base" not in errors:
+                    errors["base"] = "invalid_credentials"
         return self.async_show_form(
             step_id=step_id,
-            data_schema=vol.Schema({vol.Required(CONF_COOKIE): str}),
+            data_schema=vol.Schema(
+                {vol.Required(CONF_COOKIE): _session_input_selector()}
+            ),
             errors=errors,
             description_placeholders={
                 "account_name": entry.data[CONF_ACCOUNT_NAME],

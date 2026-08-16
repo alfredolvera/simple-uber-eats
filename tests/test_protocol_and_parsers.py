@@ -60,36 +60,264 @@ class FakeSession:
 
 
 class CookieTests(unittest.TestCase):
-    def cookie(self, extra: str = "theme=dark") -> str:
-        return f"sid=QA.0123456789; uev2.id.session=abc-def-ghi; {extra}; padding={'x' * 30}"
+    SID = "QA.EXAMPLE-0123456789"
+    SESSION = "00000000-0000-0000-0000-000000000000"
+    CANONICAL = (
+        "sid=QA.EXAMPLE-0123456789; "
+        "uev2.id.session=00000000-0000-0000-0000-000000000000"
+    )
 
-    def test_parse_and_preserve_cookie(self):
-        credentials = protocol.SessionCredentials.from_cookie_header(self.cookie())
-        self.assertEqual("QA.0123456789", credentials.sid)
-        self.assertEqual("abc-def-ghi", credentials.session_id)
-        self.assertIn("theme=dark", credentials.header())
+    def cookie(self) -> str:
+        return (
+            "theme=dark; analytics_id=FAKE-ANALYTICS; "
+            f"sid={self.SID}; uev2.id.session={self.SESSION}; "
+            "uev2.loc=FAKE-LOCATION; jwt-session=FAKE-JWT"
+        )
 
-    def test_required_cookie_errors(self):
+    def parse(self, value: str):
+        return protocol.SessionCredentials.from_authentication_input(value)
+
+    def assert_credentials(self, value: str):
+        credentials = self.parse(value)
+        self.assertEqual(self.SID, credentials.sid)
+        self.assertEqual(self.SESSION, credentials.session_id)
+        self.assertEqual(self.CANONICAL, credentials.header())
+        return credentials
+
+    def assert_error(self, value: str, expected: str):
+        with self.assertRaises(protocol.CookieValidationError) as ctx:
+            self.parse(value)
+        self.assertEqual(expected, ctx.exception.translation_key)
+
+    def test_raw_cookie_inputs_are_minimized(self):
+        self.assert_credentials(self.CANONICAL)
+        credentials = self.assert_credentials(self.cookie())
+        for unrelated in (
+            "theme",
+            "analytics_id",
+            "uev2.loc",
+            "jwt-session",
+        ):
+            self.assertNotIn(unrelated, credentials.header())
+
+    def test_standalone_cookie_header_is_case_insensitive(self):
+        self.assert_credentials(f"Cookie: {self.cookie()}")
+        self.assert_credentials(f"  cookie  :  {self.cookie()}")
+
+    def test_firefox_multiline_copy_as_curl(self):
+        copied = f"""curl 'https://www.ubereats.com/_p/api/getActiveOrdersV1?fake=1' \\
+  -X POST \\
+  -H 'Accept: application/json' \\
+  -H 'Cookie: {self.cookie()}' \\
+  --data-raw '{{"cookie_note":"not a header"}}'"""
+        self.assert_credentials(copied)
+
+    def test_chromium_double_quoted_and_long_header_forms(self):
+        double_quoted = (
+            'curl "https://www.ubereats.com/api/getActiveOrdersV1" '
+            '-H "content-type: application/json" '
+            f'-H "cookie: {self.cookie()}" --data-raw "{{}}"'
+        )
+        long_form = (
+            "curl 'https://www.ubereats.com/api/getActiveOrdersV1' "
+            f"--header 'Cookie: {self.cookie()}'"
+        )
+        long_equals = (
+            "curl 'https://www.ubereats.com/api/getActiveOrdersV1' "
+            f"--header='Cookie: {self.cookie()}'"
+        )
+        self.assert_credentials(double_quoted)
+        self.assert_credentials(long_form)
+        self.assert_credentials(long_equals)
+
+    def test_request_header_block_with_irrelevant_headers(self):
+        headers = f"""POST /_p/api/getActiveOrdersV1 HTTP/2
+Host: www.ubereats.com
+Content-Type: application/json
+Cookie: {self.cookie()}
+Referer: https://www.ubereats.com/store/example?cookie=not-a-header
+Authorization: FAKE-NOT-USED"""
+        self.assert_credentials(headers)
+
+    def test_cookie_header_can_appear_in_middle_of_long_curl(self):
+        copied = (
+            "curl 'https://www.ubereats.com/_p/api/getActiveOrdersV1' "
+            "-H 'Accept: */*' -H 'X-Fake: before' "
+            f"-H 'Cookie: {self.cookie()}' "
+            "-H 'Referer: https://www.ubereats.com/?cookie=fake' "
+            "-H 'X-Fake: after' --data-raw '{\"value\":\"cookie: fake\"}'"
+        )
+        self.assert_credentials(copied)
+
+    def test_curl_url_and_body_are_never_mined_for_cookie_headers(self):
+        cookie_text = self.CANONICAL
         cases = (
-            ("", "cookie_too_short"),
-            ("x" * 60, "sid_not_found"),
-            (f"sid=QA.good; padding={'x' * 60}", "session_not_found"),
-            (f"sid=bad; uev2.id.session=a-b; padding={'x' * 50}", "invalid_sid"),
+            "curl 'https://www.ubereats.com/?Cookie%3A=" + cookie_text + "'",
+            (
+                "curl 'https://www.ubereats.com/api/getActiveOrdersV1' "
+                f"--data-raw \"request body says -H 'Cookie: {cookie_text}'\""
+            ),
+            (
+                "curl 'https://www.ubereats.com/api/getActiveOrdersV1' "
+                f"--data-raw 'first line\nCookie: {cookie_text}\nlast line'"
+            ),
+        )
+        for copied in cases:
+            with self.subTest(copied=copied):
+                self.assert_error(copied, "malformed_session_input")
+
+    def test_identical_candidates_are_accepted_and_conflicts_rejected(self):
+        identical = f"Cookie: {self.CANONICAL}\nCookie: {self.CANONICAL}"
+        conflicting = (
+            f"Cookie: {self.CANONICAL}\n"
+            "Cookie: sid=QA.DIFFERENT; "
+            "uev2.id.session=11111111-1111-1111-1111-111111111111"
+        )
+        partially_invalid = (
+            f"Cookie: {self.CANONICAL}\n"
+            f"Cookie: sid={self.SID}; uev2.id.session=invalid"
+        )
+        self.assert_credentials(identical)
+        self.assert_error(conflicting, "ambiguous_session_input")
+        self.assert_error(partially_invalid, "ambiguous_session_input")
+
+    def test_missing_empty_malformed_and_unrelated_input_errors(self):
+        cases = (
+            ("", "session_input_not_found"),
+            (
+                f"Cookie: uev2.id.session={self.SESSION}; theme=dark",
+                "sid_not_found",
+            ),
+            (f"Cookie: sid={self.SID}; theme=dark", "session_not_found"),
+            (
+                f"Cookie: sid=not-valid; uev2.id.session={self.SESSION}",
+                "invalid_sid",
+            ),
+            (
+                f"Cookie: sid={self.SID}; uev2.id.session=notvalid",
+                "invalid_session",
+            ),
+            (
+                "curl 'https://www.ubereats.com/' "
+                f"-H 'Cookie: sid={self.SID}\nINJECTED; "
+                f"uev2.id.session={self.SESSION}'",
+                "invalid_sid",
+            ),
+            (
+                "curl 'https://www.ubereats.com/' -H 'Cookie "
+                f"sid={self.SID}; uev2.id.session={self.SESSION}'",
+                "malformed_session_input",
+            ),
+            ("ordinary prose mentioning a cookie jar", "session_input_not_found"),
+            (
+                "https://www.ubereats.com/?cookie=sid%3DQA.EXAMPLE",
+                "session_input_not_found",
+            ),
         )
         for raw, expected in cases:
-            with self.subTest(expected=expected), self.assertRaises(protocol.CookieValidationError) as ctx:
-                protocol.SessionCredentials.from_cookie_header(raw)
-            self.assertEqual(expected, ctx.exception.translation_key)
+            with self.subTest(expected=expected):
+                self.assert_error(raw, expected)
+
+    def test_cookie_values_keep_common_encoded_characters_and_equals(self):
+        raw = (
+            "sid=QA.EXAMPLE_~%2B%2F-0123; "
+            "uev2.id.session=00000000-0000-0000-0000-000000000000%3D%3D; "
+            "other=fake"
+        )
+        credentials = self.parse(raw)
+        self.assertEqual("QA.EXAMPLE_~%2B%2F-0123", credentials.sid)
+        self.assertEqual(
+            "00000000-0000-0000-0000-000000000000%3D%3D",
+            credentials.session_id,
+        )
+        self.assertEqual(
+            "sid=QA.EXAMPLE_~%2B%2F-0123; "
+            "uev2.id.session=00000000-0000-0000-0000-000000000000%3D%3D",
+            credentials.header(),
+        )
+
+    def test_quoted_required_values_and_unrelated_duplicates(self):
+        credentials = self.parse(
+            f'foo=A; foo=B; sid="{self.SID}"; '
+            f'uev2.id.session="{self.SESSION}"'
+        )
+        self.assertEqual(self.CANONICAL, credentials.header())
+
+    def test_required_cookie_duplicate_semantics(self):
+        self.assert_credentials(
+            f"sid={self.SID}; sid={self.SID}; "
+            f"uev2.id.session={self.SESSION}; "
+            f"uev2.id.session={self.SESSION}"
+        )
+        conflicts = (
+            f"sid={self.SID}; sid=QA.DIFFERENT; "
+            f"uev2.id.session={self.SESSION}",
+            f"sid={self.SID}; uev2.id.session={self.SESSION}; "
+            "uev2.id.session=different-session",
+        )
+        for value in conflicts:
+            with self.subTest(value=value):
+                self.assert_error(value, "ambiguous_session_input")
+
+    def test_curl_shell_like_arguments_remain_inert_text(self):
+        cases = (
+            (
+                "curl https://example.invalid/$(touch /tmp/pwned) "
+                f"-H 'Cookie: {self.CANONICAL}'"
+            ),
+            (
+                "curl `touch /tmp/pwned` "
+                f"-H 'Cookie: {self.CANONICAL}'"
+            ),
+            f"curl -H 'Cookie: {self.CANONICAL}' --data @/etc/passwd",
+            f"curl --config /etc/passwd -H 'Cookie: {self.CANONICAL}'",
+        )
+        for value in cases:
+            with self.subTest(value=value):
+                self.assert_credentials(value)
+
+    def test_commented_and_lowercase_short_headers_are_not_candidates(self):
+        cases = (
+            (
+                "curl https://example.invalid/ # "
+                f"-H 'Cookie: {self.CANONICAL}'"
+            ),
+            f"curl -h 'Cookie: {self.CANONICAL}'",
+        )
+        for value in cases:
+            with self.subTest(value=value):
+                self.assert_error(value, "malformed_session_input")
+
+    def test_authentication_input_size_boundary(self):
+        prefix = f"{self.CANONICAL}; padding="
+        for size in (
+            protocol.MAX_AUTHENTICATION_INPUT_BYTES - 1,
+            protocol.MAX_AUTHENTICATION_INPUT_BYTES,
+        ):
+            value = prefix + "x" * (size - len(prefix))
+            with self.subTest(size=size):
+                self.assertEqual(size, len(value.encode("utf-8")))
+                self.assert_credentials(value)
+
+        oversized = prefix + "x" * (
+            protocol.MAX_AUTHENTICATION_INPUT_BYTES + 1 - len(prefix)
+        )
+        self.assert_error(oversized, "session_input_too_large")
+
+    def test_unpaired_unicode_surrogate_is_malformed_input(self):
+        self.assert_error(f"{self.CANONICAL}\ud800", "malformed_session_input")
 
     def test_rotation_variants(self):
-        credentials = protocol.SessionCredentials.from_cookie_header(self.cookie())
+        credentials = self.parse(self.cookie())
         sid = credentials.rotated({"sid": "QA.rotated"})
         session = credentials.rotated({"uev2.id.session": "new-session"})
         both = credentials.rotated({"sid": "QA.two", "uev2.id.session": "two-session"})
         self.assertEqual(("QA.rotated", credentials.session_id), (sid.sid, sid.session_id))
         self.assertEqual((credentials.sid, "new-session"), (session.sid, session.session_id))
         self.assertEqual(("QA.two", "two-session"), (both.sid, both.session_id))
-        self.assertIn("theme=dark", both.header())
+        self.assertEqual(
+            "sid=QA.two; uev2.id.session=two-session", both.header()
+        )
 
         stored = protocol.rotated_entry_data(
             {"account_name": "A", "time_zone": "UTC", "sid": "old"}, both
@@ -97,6 +325,18 @@ class CookieTests(unittest.TestCase):
         self.assertEqual("A", stored["account_name"])
         self.assertEqual("UTC", stored["time_zone"])
         self.assertEqual("QA.two", stored["sid"])
+        self.assertEqual("two-session", stored["session_id"])
+        self.assertEqual(
+            "sid=QA.two; uev2.id.session=two-session", stored["full_cookie"]
+        )
+
+    def test_existing_full_cookie_is_ignored_and_normalized(self):
+        credentials = protocol.SessionCredentials.from_stored(
+            self.SID,
+            self.SESSION,
+            self.cookie(),
+        )
+        self.assertEqual(self.CANONICAL, credentials.header())
 
     def test_poll_and_backoff_policy(self):
         self.assertEqual(60, protocol.next_poll_interval(0, False).total_seconds())
@@ -141,7 +381,9 @@ class ApiClientTests(unittest.IsolatedAsyncioTestCase):
         url, payload, headers = session.calls[0]
         self.assertIn("getActiveOrdersV1?localeCode=us", url)
         self.assertEqual("America/Mexico_City", payload["timezone"])
-        self.assertIn("theme=dark", headers["Cookie"])
+        self.assertEqual(
+            "sid=QA.original; uev2.id.session=old-session", headers["Cookie"]
+        )
 
     async def test_non_success_does_not_attempt_json_decode(self):
         class NoJsonResponse(FakeResponse):
@@ -152,6 +394,24 @@ class ApiClientTests(unittest.IsolatedAsyncioTestCase):
         result = await api.UberEatsApiClient(session, self.credentials(), "UTC").active_orders()
         self.assertEqual(429, result.status)
         self.assertIsNone(result.body)
+
+    async def test_old_entry_sends_only_authoritative_minimum_cookie(self):
+        historical = (
+            "analytics=FAKE; sid=QA.STALE; location=FAKE; "
+            "uev2.id.session=stale-session; browser_id=FAKE"
+        )
+        credentials = protocol.SessionCredentials.from_stored(
+            "QA.authoritative",
+            "authoritative-session",
+            historical,
+        )
+        session = FakeSession([FakeResponse(200, {"data": {"orders": []}})])
+        await api.UberEatsApiClient(session, credentials, "UTC").active_orders()
+
+        self.assertEqual(
+            "sid=QA.authoritative; uev2.id.session=authoritative-session",
+            session.calls[0][2]["Cookie"],
+        )
 
 
 class ParserTests(unittest.TestCase):

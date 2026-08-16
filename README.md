@@ -205,119 +205,156 @@ Simple Uber Eats 3.0 requires Home Assistant 2026.8 or newer.
 
 ## Authentication
 
-Simple Uber Eats connects using an existing signed-in Uber Eats browser session.
-It does not ask for your Uber email, password, or two-factor authentication
-code. This is an unofficial integration using Uber's web endpoints, not an
-official Uber authentication method or public API.
+Simple Uber Eats connects through an Uber Eats browser session that is already
+signed in. The recommended method is to copy one browser request as cURL and
+paste it into Home Assistant. You do not need to understand the request or
+manually find individual cookies.
 
-The integration needs the complete value of a browser request's `Cookie`
-header. Use a desktop browser and follow the instructions for your browser
-below.
+### Recommended setup: Copy as cURL
 
-### 1. Sign in to Uber Eats
+1. **Open a supported desktop browser.** Firefox, Chrome, Chromium, Edge, and
+   Brave provide a direct Copy as cURL command. Safari users can use the
+   alternative described below.
+2. **Open Developer Tools.** Press **F12** where supported, or press
+   **Ctrl+Shift+I** on Windows/Linux. On macOS, press **Command+Option+I**.
+   You can also open Developer Tools from the browser's main menu.
+3. **Open the Network tab.** Network shows requests made by the webpage. You
+   do not need to understand or modify anything shown there.
+4. **Keep Developer Tools open and visit
+   [https://www.ubereats.com/](https://www.ubereats.com/).**
+5. **Sign in normally if needed.** Enter your Uber password only on Uber's own
+   website and complete any email OTP, SMS code, or two-factor verification
+   only there. Simple Uber Eats never asks for your password or verification
+   code.
+6. **Reload the Uber Eats page once** while Network is open so the browser
+   records a fresh set of requests.
+7. **Use the Network filter box and search for `getActiveOrdersV1`.** Look for
+   a request whose name contains that text. If it does not appear, clear the
+   filter, reload, and try `getUserV1` as a fallback.
+8. **Right-click the request.**
+9. **Choose Copy → Copy as cURL.** Menu wording can differ slightly by browser;
+   choose the Copy as cURL option from the request's context menu.
+10. **Return to Home Assistant.**
+11. **Open Settings → Devices & services → Add integration** and search for
+    **Simple Uber Eats**.
+12. **Paste the entire copied cURL into the Uber Eats session field.** Do not
+    edit it, remove lines, or try to extract the Cookie header yourself. Simple
+    Uber Eats locates the required session data automatically.
+13. **Submit the form.** Parsing happens locally in Home Assistant. The
+    integration extracts only `sid` and `uev2.id.session`, immediately discards
+    all other request headers, cookies, URLs, and body data, and validates the
+    two credentials directly with Uber Eats.
+14. **Confirm setup completed.** Home Assistant creates a Simple Uber Eats
+    device named for the connected account and adds its connectivity,
+    active-order, status, ETA, restaurant, courier, and tracker entities.
 
-1. Open [https://www.ubereats.com/](https://www.ubereats.com/).
-2. Sign in to the Uber Eats account you want to connect.
-3. Wait for the site to load fully and confirm that you are signed in.
-4. Keep the Uber Eats tab open.
-
-### 2. Find an authenticated request
-
-`getActiveOrdersV1` is the preferred request because it is one of the
-operations Simple Uber Eats uses to retrieve active orders.
-
-#### Chrome, Edge, Brave, or another Chromium browser
-
-1. Press **F12** or **Ctrl+Shift+I**. On macOS, press
-   **Option+Command+I**.
-2. Select the **Network** tab.
-3. Keep Developer Tools open and reload the Uber Eats page.
-4. Enter `getActiveOrdersV1` in the Network filter box.
-5. Select the request named **getActiveOrdersV1**.
-6. Open **Headers** and scroll to **Request Headers**.
-7. Find **Cookie** and copy its complete value.
-
-If the browser abbreviates or formats the headers, use **view source** in the
-Request Headers section. If `getActiveOrdersV1` does not appear, clear the
-filter, reload again, and look for an authenticated `ubereats.com` request such
-as `getUserV1`.
+### Browser-specific instructions
 
 #### Firefox
 
-1. Press **F12** or **Ctrl+Shift+I**. On macOS, press
-   **Option+Command+I**.
-2. Select **Network** and reload the Uber Eats page.
-3. Filter for `getActiveOrdersV1` and select the request.
-4. Open **Headers** and expand **Request Headers**.
-5. Find **Cookie** and copy its complete value.
-6. Use the **Raw** view if the complete unformatted header is not visible.
+1. Open Firefox.
+2. Press **F12** (or **Ctrl+Shift+I**; on macOS,
+   **Command+Option+I**).
+3. Click **Network**.
+4. Go to [ubereats.com](https://www.ubereats.com/).
+5. Sign in to Uber Eats normally.
+6. Reload the page if requests are not already visible.
+7. Filter for `getActiveOrdersV1`.
+8. Right-click the matching request.
+9. Choose **Copy → Copy as cURL**.
+10. Paste the entire result into the Home Assistant **Uber Eats session**
+    field.
+
+#### Chrome, Chromium, Edge, and Brave
+
+1. Open the browser and press **F12** or **Ctrl+Shift+I** (on macOS,
+   **Command+Option+I**).
+2. Select **Network**.
+3. Open [ubereats.com](https://www.ubereats.com/), sign in, and reload once.
+4. Filter for `getActiveOrdersV1`.
+5. Right-click the matching request.
+6. Choose **Copy → Copy as cURL**. Some versions offer variants such as
+   **Copy as cURL (bash)**; that format is accepted.
+7. Paste the entire result into the Home Assistant **Uber Eats session**
+   field.
 
 #### Safari on macOS
 
-If the Develop menu is hidden:
+Safari's available copy commands vary by version. If the Develop menu is not
+visible, open **Safari → Settings → Advanced** and enable **Show features for
+web developers**. Then choose **Develop → Show Web Inspector**, open
+**Network**, reload Uber Eats, and select `getActiveOrdersV1`.
 
-1. Open **Safari → Settings → Advanced**.
-2. Enable **Show features for web developers**.
+If the request context menu offers **Copy as cURL**, paste that complete result.
+Otherwise, use **Copy Request Headers** if available, or copy the complete
+`Cookie:` request-header line. All three formats are accepted by the same Home
+Assistant field.
 
-Then:
+### Advanced alternative inputs
 
-1. Return to the signed-in Uber Eats page.
-2. Choose **Develop → Show Web Inspector**.
-3. Open **Network** and reload Uber Eats.
-4. Find and select `getActiveOrdersV1`.
-5. Inspect its request headers, find **Cookie**, and copy the complete value.
+Copy as cURL is the easiest and recommended method. The **Uber Eats session**
+field also accepts these fallback formats:
 
-### 3. Paste the complete Cookie value
+- a copied request-header block
+- a complete `Cookie:` header line
+- a raw cookie string
 
-Paste only the Cookie header's value into the **Uber Eats Cookie header**
-field. Its general shape is:
-
-```text
-cookie1=value1; cookie2=value2; cookie3=value3; ...
-```
-
-Do not include the `Cookie:` label, add quotation marks, or copy only one
-individual cookie. The complete value must include, among other cookies:
+The input must contain both required values. This example is deliberately fake:
 
 ```text
-sid=...
-uev2.id.session=...
+sid=QA.EXAMPLE; uev2.id.session=00000000-0000-0000-0000-000000000000
 ```
 
-Simple Uber Eats validates the browser session before saving the account. It
-extracts the required session values locally and preserves cookie rotation
-returned by Uber.
+Regardless of input format, only those two values are retained and sent in the
+canonical minimum Cookie header. Response rotation of either value remains
+supported.
+
+### Session privacy and security
+
+A copied browser request is sensitive. It can contain active session
+credentials, location information, browser or device identifiers, and other
+cookies. Treat it like a password:
+
+- never post it in a GitHub issue
+- never paste it into Discord, forums, or public chats
+- never send it to another person
+- never include it in screenshots or logs
+
+The parser runs locally inside Home Assistant. Simple Uber Eats retains only
+`sid` and `uev2.id.session`; every other copied header, cookie, URL, and body
+value is discarded. Your Uber password, email OTP, SMS code, and two-factor
+authentication code are never handled by the integration.
 
 ### Authentication troubleshooting
 
-- **`getActiveOrdersV1` is missing:** Make sure Developer Tools was open and
-  the Network tab was recording before reloading. Confirm you are signed in,
-  clear the filter, and look for `getUserV1` or another request made directly
-  to `www.ubereats.com`.
-- **`sid` is missing:** You probably copied only part of the header or chose
-  the wrong request. Copy the complete Cookie request-header value from an
-  authenticated `ubereats.com` request.
-- **`uev2.id.session` is missing:** Copy the complete Cookie header, not an
-  individual cookie from browser storage.
-- **Uber rejected the session:** Return to Uber Eats and confirm you are still
-  signed in. If needed, sign out and back in, reload the page, copy a fresh
-  Cookie header, and try again.
+- **No `getActiveOrdersV1` request appears:** Make sure Network was open before
+  reloading, reload `ubereats.com`, and confirm you are signed in. If necessary,
+  clear the filter and try `getUserV1`.
+- **The Network panel is empty:** Leave Developer Tools open and reload the
+  webpage. Confirm the Network recording control is enabled.
+- **The filter hides everything:** Clear the filter, reload, confirm requests
+  appear, and then search again.
+- **The copied request is rejected:** Copy it again without manually modifying
+  it. Confirm the request came from `www.ubereats.com` and contains a Cookie
+  request header.
+- **The browser menu differs:** Open the request's context menu and look for
+  **Copy as cURL** or **Copy Request Headers**. The complete `Cookie:` line is
+  also accepted as a fallback.
+- **The session expired:** Sign in to Uber Eats again, repeat Copy as cURL, and
+  use **Reconfigure** or the Home Assistant reauthentication prompt to paste
+  the fresh request.
+- **Uber Eats is temporarily unavailable:** Wait and submit again. A timeout,
+  rate limit, or server problem is reported separately from rejected
+  credentials.
 
 Use **Reconfigure** on the config entry to replace credentials proactively.
 When the integration confirms that authentication has expired, Home Assistant
-starts its reauthentication flow and asks for a fresh Cookie header.
-
-### Cookie security
-
-Treat the Cookie header like a password: it represents your signed-in Uber Eats
-browser session. Do not share it, post it in GitHub issues, include it in
-screenshots or logs, or send it in support messages. Simple Uber Eats never
-needs your Uber password or two-factor authentication code.
+starts its reauthentication flow and asks for a fresh Uber Eats session.
 
 ## Troubleshooting
 
 - **Account connected is unavailable:** Home Assistant has not received a conclusive response, or a temporary network, rate-limit, or server problem occurred. This is not the same as invalid credentials.
-- **Account connected is off:** Authentication has been conclusively rejected. Complete the reauthentication flow with a fresh browser cookie string.
+- **Account connected is off:** Authentication has been conclusively rejected. Complete the reauthentication flow with a fresh copied Uber Eats request.
 - **Courier tracker is idle:** An order may not yet have an assigned courier or usable courier telemetry.
 - **Courier marker stops moving:** The tracker does not extrapolate. It freezes when real telemetry runs out and resumes when new real points arrive.
 - **ETA is unavailable:** Uber has not supplied a valid ETA, or the reported time falls outside the bounded plausible delivery window. The entity updates when newer coordinator data arrives.
@@ -325,7 +362,7 @@ needs your Uber password or two-factor authentication code.
 
 ## Privacy and security
 
-- Credentials and cookies are stored locally in your Home Assistant config entry and sent only as required to Uber's endpoints.
+- Only `sid` and `uev2.id.session` are stored locally in the Home Assistant config entry and sent to Uber's endpoints as the minimum Cookie header.
 - Downloadable diagnostics omit cookies, authentication headers, session identifiers, names, addresses, and raw courier coordinates.
 - Smooth playback remains local after Uber telemetry has been received and creates no extra Uber requests.
 - This project is unofficial and is not affiliated with, endorsed by, or supported by Uber.

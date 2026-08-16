@@ -19,6 +19,7 @@ from .const import (
     LEGACY_DOMAIN,
 )
 from .migration import RETIRED_ENTITY_UNIQUE_ID_KEYS, migrate_legacy_registry
+from .protocol import SessionCredentials, rotated_entry_data
 
 PLATFORMS = (Platform.SENSOR, Platform.BINARY_SENSOR, Platform.DEVICE_TRACKER)
 
@@ -72,14 +73,23 @@ def _async_apply_label_to_entry_entities(
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Create the account coordinator and its native entity platforms."""
+    credentials = SessionCredentials.from_stored(
+        entry.data[CONF_SID],
+        entry.data[CONF_SESSION_ID],
+        entry.data.get(CONF_FULL_COOKIE),
+    )
+    normalized_entry_data = rotated_entry_data(entry.data, credentials)
+    if normalized_entry_data != dict(entry.data):
+        hass.config_entries.async_update_entry(entry, data=normalized_entry_data)
+
     coordinator = UberEatsCoordinator(
         hass=hass,
         entry_id=entry.entry_id,
-        sid=entry.data[CONF_SID],
-        session_id=entry.data[CONF_SESSION_ID],
+        sid=credentials.sid,
+        session_id=credentials.session_id,
         account_name=entry.data[CONF_ACCOUNT_NAME],
         time_zone=entry.data[CONF_TIME_ZONE],
-        full_cookie=entry.data.get(CONF_FULL_COOKIE),
+        full_cookie=credentials.header(),
     )
     try:
         await coordinator.async_config_entry_first_refresh()

@@ -1,5 +1,18 @@
 # Changelog
 
+## [3.1.0] - 2026-08-16
+
+### Highlights
+
+- Added browser **Copy as cURL** as the recommended authentication workflow. Setup, reauthentication, and reconfiguration also accept copied request headers, a complete Cookie header, or a raw cookie string.
+- Reduced stored and outbound session data to the two credentials Simple Uber Eats requires: `sid` and `uev2.id.session`.
+- Discarded all other copied browser cookies, location data, request headers, request bodies, URLs, and device-specific request content after local parsing.
+- Automatically normalizes existing entries that contain historical full browser cookies to the minimal two-cookie representation.
+- Improved validation errors so temporary Uber Eats, network, and server failures remain distinct from confirmed authentication rejection.
+- Improved credential-rotation handling during setup, reauthentication, and reconfiguration so the final rotated credentials are retained.
+- Expanded browser-specific authentication documentation and security guidance.
+- Hardened the non-executing authentication parser and expanded its regression coverage.
+
 ## [3.0.1]
 
 ### Fixed
