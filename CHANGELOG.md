@@ -1,5 +1,14 @@
 # Changelog
 
+## [3.1.1] - 2026-10-01
+
+### Fixed
+
+- Recognizes explicit logged-out and expired-session responses during profile and active-order refreshes so Home Assistant can prompt the user to reauthenticate.
+- Explicitly associates the coordinator with its config entry for native Home Assistant credential recovery.
+- Preserves the existing three-response confirmation for HTTP 401/403 failures and keeps temporary failures distinct from expired sessions.
+- Added regression tests for session expiration, successful recovery, and temporary API failures.
+
 ## [3.1.0] - 2026-08-16
 
 ### Highlights
