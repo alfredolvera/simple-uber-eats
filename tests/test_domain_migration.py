@@ -247,8 +247,9 @@ def _install_stubs():
     update_coordinator.CoordinatorEntity = FakeCoordinatorEntity
 
     class DataUpdateCoordinator:
-        def __init__(self, hass, _logger, *, name, update_interval):
+        def __init__(self, hass, _logger, *, name, update_interval, config_entry=None):
             self.hass = hass
+            self.config_entry = config_entry
             self.name = name
             self.update_interval = update_interval
 
@@ -1126,6 +1127,89 @@ class AuthenticationLifecycleTests(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(expected, restarted.full_cookie)
         self.assertEqual(expected, restarted._api.credentials.header())
+
+
+class RuntimeReauthenticationTests(unittest.IsolatedAsyncioTestCase):
+    def make_coordinator(self, responses):
+        entry = FakeEntry("current-1", const.DOMAIN, "Account", {})
+        active = REAL_COORDINATOR(
+            FakeHass([entry]), entry.entry_id, "QA.TEST", "session", "Account", "UTC"
+        )
+        active._api._session = FakeSession(responses)
+        return active, entry
+
+    async def test_logged_out_profile_requests_reauthentication(self):
+        active, _entry = self.make_coordinator([
+            FakeResponse(200, {"data": {"isLoggedIn": False}}),
+            FakeResponse(200, {"data": {"orders": []}}),
+        ])
+        with self.assertRaises(ConfigEntryAuthFailed):
+            await active._async_update_data()
+        self.assertEqual("authentication_failed", active.connection_state)
+
+    async def test_expired_profile_requests_reauthentication(self):
+        active, _entry = self.make_coordinator([
+            FakeResponse(200, {"error": {"code": "SESSION_EXPIRED"}}),
+            FakeResponse(200, {"data": {"orders": []}}),
+        ])
+        with self.assertRaises(ConfigEntryAuthFailed):
+            await active._async_update_data()
+
+    async def test_logged_out_active_orders_requests_reauthentication(self):
+        active, _entry = self.make_coordinator([
+            FakeResponse(200, {"data": {"isLoggedIn": True}}),
+            FakeResponse(200, {"data": {"isLoggedIn": False}}),
+        ])
+        with self.assertRaises(ConfigEntryAuthFailed):
+            await active._async_update_data()
+
+    def test_coordinator_is_explicitly_linked_to_config_entry(self):
+        active, entry = self.make_coordinator([])
+        self.assertIs(entry, active.config_entry)
+
+    async def test_temporary_profile_failure_does_not_require_sign_in(self):
+        for status in (403, 429, 500):
+            with self.subTest(status=status):
+                active, _entry = self.make_coordinator([
+                    FakeResponse(status),
+                    FakeResponse(200, {"data": {"orders": []}}),
+                ])
+                result = await active._async_update_data()
+                self.assertEqual([], result["orders"])
+                self.assertEqual("connected", active.connection_state)
+
+    async def test_three_active_order_rejections_require_sign_in(self):
+        active, _entry = self.make_coordinator([
+            FakeResponse(200, {"data": {"isLoggedIn": True}}),
+            FakeResponse(403), FakeResponse(403), FakeResponse(403),
+        ])
+        await active._async_update_data()
+        await active._async_update_data()
+        with self.assertRaises(ConfigEntryAuthFailed):
+            await active._async_update_data()
+        self.assertEqual("authentication_failed", active.connection_state)
+
+    async def test_temporary_active_order_errors_do_not_require_sign_in(self):
+        for status in (429, 500, 503):
+            with self.subTest(status=status):
+                active, _entry = self.make_coordinator([
+                    FakeResponse(200, {"data": {"isLoggedIn": True}}),
+                    FakeResponse(status),
+                ])
+                await active._async_update_data()
+                self.assertEqual("temporarily_unavailable", active.connection_state)
+
+    async def test_success_interrupts_repeated_authentication_rejections(self):
+        active, _entry = self.make_coordinator([
+            FakeResponse(200, {"data": {"isLoggedIn": True}}),
+            FakeResponse(403), FakeResponse(403),
+            FakeResponse(200, {"data": {"orders": []}}),
+            FakeResponse(403),
+        ])
+        for _ in range(4):
+            await active._async_update_data()
+        self.assertEqual("temporarily_unavailable", active.connection_state)
+        self.assertEqual(1, active._request_policy.authentication_failures)
 
 
 class RegistryMigrationTests(unittest.TestCase):

@@ -69,6 +69,7 @@ class UberEatsCoordinator(DataUpdateCoordinator):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=hass.config_entries.async_get_entry(entry_id),
             name=f"Simple Uber Eats Orders - {account_name}",
             update_interval=next_poll_interval(1, False),
         )
@@ -107,12 +108,12 @@ class UberEatsCoordinator(DataUpdateCoordinator):
         return list(self._tracking_diagnostics)
 
     async def _async_update_data(self) -> dict[str, Any]:
-        await self._refresh_profile_when_due()
         started = time.monotonic()
         self.last_connection_attempt = datetime.now(timezone.utc)
         status: int | None = None
         recorded = False
         try:
+            await self._refresh_profile_when_due()
             response = await self._api.active_orders()
             status = response.status
             received = datetime.now(timezone.utc)
@@ -198,6 +199,10 @@ class UberEatsCoordinator(DataUpdateCoordinator):
         try:
             response = await self._api.user_profile()
             self._persist_rotated_credentials(response)
+            if response.status == 200 and auth_error_code(response.body):
+                raise ConfigEntryAuthFailed(
+                    "Uber Eats session has expired; sign in again to reconnect"
+                )
             profile = parse_profile(response.body) if response.status == 200 else None
             if profile is not None:
                 self._cached_user_profile = profile
@@ -206,6 +211,8 @@ class UberEatsCoordinator(DataUpdateCoordinator):
                 )
                 if display_name:
                     self.account_name = display_name
+        except ConfigEntryAuthFailed:
+            raise
         except Exception as err:
             _LOGGER.debug("Uber Eats profile refresh failed: %s", type(err).__name__)
         if self._cached_user_profile is None:

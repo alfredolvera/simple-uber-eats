@@ -26,7 +26,12 @@ class MalformedUberResponse(ValueError):
 
 def auth_error_code(payload: Any) -> str | None:
     """Return a definitive authentication code from an otherwise valid body."""
-    if not isinstance(payload, dict) or not isinstance(payload.get("error"), dict):
+    if not isinstance(payload, dict):
+        return None
+    data = payload.get("data")
+    if isinstance(data, dict) and data.get("isLoggedIn") is False:
+        return "SESSION_EXPIRED"
+    if not isinstance(payload.get("error"), dict):
         return None
     code = payload["error"].get("code")
     return code if code in AUTH_ERROR_CODES else None
