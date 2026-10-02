@@ -1,5 +1,19 @@
 # Changelog
 
+## [3.1.2] - 2026-10-02
+
+### Fixed
+
+- Allows initial setup and legacy import to complete when active orders validate the session but the optional profile endpoint returns a Cloudflare HTML challenge or is temporarily unavailable. Fixes [#1](https://github.com/alfredolvera/simple-uber-eats/issues/1) via [#2](https://github.com/alfredolvera/simple-uber-eats/pull/2).
+- Keeps explicit logged-out and expired-session responses rejected while distinguishing HTML challenges, malformed responses, and temporary failures from invalid credentials.
+- Requires a valid active-orders response for authentication and retains server-rotated cookies and duplicate-account detection when profile metadata is unavailable.
+- Assigns distinct generic account names to prevent entity identifier collisions while preserving existing and imported account identities.
+
+### Validation
+
+- All 118 automated tests pass using synthetic sessions and the existing simulated Home Assistant/HTTP harness, including new initial-setup and profile-failure regressions.
+- This release has not been validated in a real Home Assistant instance or with live Uber Eats credentials; it does not attempt to bypass Cloudflare.
+
 ## [3.1.1] - 2026-10-01
 
 ### Fixed
