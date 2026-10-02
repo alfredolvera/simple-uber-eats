@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from importlib.util import module_from_spec, spec_from_file_location
+import json
 from pathlib import Path
 import sys
 import types
@@ -47,6 +48,9 @@ class FakeResponse:
 
     async def json(self):
         return self._body
+
+    async def text(self):
+        return self._body if isinstance(self._body, str) else json.dumps(self._body)
 
 
 class FakeSession:
@@ -385,15 +389,39 @@ class ApiClientTests(unittest.IsolatedAsyncioTestCase):
             "sid=QA.original; uev2.id.session=old-session", headers["Cookie"]
         )
 
-    async def test_non_success_does_not_attempt_json_decode(self):
+    async def test_temporary_http_failure_does_not_attempt_json_decode(self):
         class NoJsonResponse(FakeResponse):
             async def json(self):
                 raise AssertionError("JSON must not be read for this response")
+
+            async def text(self):
+                raise AssertionError("Body must not be read for this response")
 
         session = FakeSession([NoJsonResponse(429, None)])
         result = await api.UberEatsApiClient(session, self.credentials(), "UTC").active_orders()
         self.assertEqual(429, result.status)
         self.assertIsNone(result.body)
+
+    async def test_auth_http_responses_preserve_json_error_bodies_and_rotation(self):
+        for status in (401, 403):
+            with self.subTest(status=status):
+                body = {"error": {"code": "UNAUTHORIZED"}}
+                session = FakeSession([FakeResponse(status, body, {"sid": "QA.rotated"})])
+                client = api.UberEatsApiClient(session, self.credentials(), "UTC")
+                result = await client.user_profile()
+                self.assertEqual(body, result.body)
+                self.assertEqual("QA.rotated", result.credentials.sid)
+
+    async def test_auth_http_html_and_invalid_json_are_not_authentication_envelopes(self):
+        for status in (401, 403):
+            for body in ("<html>Cloudflare challenge</html>", '{"error":'):
+                with self.subTest(status=status, body=body):
+                    session = FakeSession([FakeResponse(status, body)])
+                    result = await api.UberEatsApiClient(
+                        session, self.credentials(), "UTC"
+                    ).active_orders()
+                    self.assertEqual(status, result.status)
+                    self.assertIsNone(result.body)
 
     async def test_old_entry_sends_only_authoritative_minimum_cookie(self):
         historical = (

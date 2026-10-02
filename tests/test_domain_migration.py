@@ -1,6 +1,7 @@
 """Tests for the pre-release integration-domain transition."""
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass, field
 from importlib.util import module_from_spec, spec_from_file_location
 import json
@@ -126,7 +127,12 @@ class FakeResponse:
         return None
 
     async def json(self):
+        if isinstance(self._body, str):
+            return json.loads(self._body)
         return self._body
+
+    async def text(self):
+        return self._body if isinstance(self._body, str) else json.dumps(self._body)
 
 
 class FakeSession:
@@ -595,8 +601,8 @@ class ConfigFlowMigrationTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_http_probe_errors_have_conservative_flow_semantics(self):
         cases = (
-            ("401", [FakeResponse(401)], "invalid_credentials"),
-            ("403", [FakeResponse(403)], "invalid_credentials"),
+            ("401", [FakeResponse(401)], "cannot_connect"),
+            ("403", [FakeResponse(403)], "cannot_connect"),
             (
                 "auth_envelope",
                 [FakeResponse(200, {"error": {"code": "SESSION_EXPIRED"}})],
@@ -609,14 +615,6 @@ class ConfigFlowMigrationTests(unittest.IsolatedAsyncioTestCase):
             (
                 "malformed_active_200",
                 [FakeResponse(200, {"data": {"unexpected": []}})],
-                "cannot_connect",
-            ),
-            (
-                "malformed_profile_200",
-                [
-                    FakeResponse(200, {"data": {"orders": []}}),
-                    FakeResponse(200, {"data": {"unexpected": True}}),
-                ],
                 "cannot_connect",
             ),
             ("transport", [OSError("temporary")], "cannot_connect"),
@@ -983,6 +981,245 @@ class ConfigFlowMigrationTests(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual("user", result["step_id"])
         self.assertIs(legacy, hass.config_entries.async_get_entry(legacy.entry_id))
+
+
+class InitialCredentialProbeTests(unittest.IsolatedAsyncioTestCase):
+    """Exercise real validation and flows with synthetic HTTP responses."""
+
+    COOKIE = "sid=QA.ISSUE-1; uev2.id.session=synthetic-session"
+    ORDERS = {"status": "success", "data": {"orders": []}}
+    CHALLENGE = (
+        '<!DOCTYPE html><html><title>Just a moment...</title>'
+        '<script src="/cdn-cgi/challenge-platform/test"></script></html>'
+    )
+
+    def setUp(self):
+        old_validate = config_flow._validate_credentials
+        old_session = config_flow.async_get_clientsession
+        self.addCleanup(setattr, config_flow, "_validate_credentials", old_validate)
+        self.addCleanup(setattr, config_flow, "async_get_clientsession", old_session)
+        config_flow._validate_credentials = REAL_VALIDATE_CREDENTIALS
+
+    def session(self, responses):
+        session = FakeSession(responses)
+        config_flow.async_get_clientsession = lambda _hass: session
+        return session
+
+    async def manual(self):
+        flow = config_flow.UberEatsConfigFlow()
+        flow.hass = FakeHass([])
+        return await flow.async_step_user({
+            const.CONF_COOKIE: self.COOKIE,
+            const.CONF_TIME_ZONE: "America/Mexico_City",
+        })
+
+    async def test_profile_challenge_accepts_valid_orders_and_rotated_cookies(self):
+        self.session([
+            FakeResponse(200, self.ORDERS, {"sid": "QA.ORDERS"}),
+            FakeResponse(403, self.CHALLENGE, {"uev2.id.session": "rotated"}),
+        ])
+        result = await self.manual()
+        self.assertEqual("create_entry", result["type"])
+        self.assertEqual("Uber Eats Account", result["title"])
+        self.assertEqual("Uber Eats Account", result["data"][const.CONF_ACCOUNT_NAME])
+        self.assertEqual("sid=QA.ORDERS; uev2.id.session=rotated",
+                         result["data"][const.CONF_FULL_COOKIE])
+        self.assertNotIn("country_code", result["data"])
+
+    async def test_legacy_import_survives_profile_challenge_without_mutating_source(self):
+        self.session([FakeResponse(200, self.ORDERS), FakeResponse(403, self.CHALLENGE)])
+        legacy = legacy_entry()
+        original = dict(legacy.data)
+        flow = config_flow.UberEatsConfigFlow()
+        flow.hass = FakeHass([legacy])
+        await flow.async_step_user()
+        result = await flow.async_step_legacy_import({config_flow.CONF_CONFIRM_IMPORT: True})
+        self.assertEqual("create_entry", result["type"])
+        self.assertEqual("Legacy Account", result["title"])
+        self.assertEqual(legacy.entry_id, result["data"][const.CONF_LEGACY_ENTRY_ID])
+        self.assertEqual({"preserved_option": True}, result["options"])
+        self.assertEqual(original, legacy.data)
+
+    async def test_optional_profile_failures_use_generic_title(self):
+        cases = [
+            FakeResponse(401), FakeResponse(403), FakeResponse(429),
+            FakeResponse(503), FakeResponse(404), FakeResponse(200, self.CHALLENGE),
+            FakeResponse(200, {"data": {"unexpected": True}}),
+            FakeResponse(200, {"status": "failure", "data": {"isLoggedIn": True}}),
+            FakeResponse(200, {"error": {"code": "SERVER_BUSY"}}),
+            OSError("temporary"), TimeoutError("temporary"),
+        ]
+        for response in cases:
+            with self.subTest(response=response):
+                self.session([FakeResponse(200, self.ORDERS), response])
+                result = await self.manual()
+                self.assertEqual("create_entry", result["type"])
+                self.assertEqual("Uber Eats Account", result["title"])
+
+    async def test_profile_explicit_authentication_errors_still_reject_session(self):
+        bodies = [
+            {"data": {"isLoggedIn": False}},
+            *({"error": {"code": code}} for code in
+              ("UNAUTHORIZED", "SESSION_EXPIRED", "INVALID_TOKEN")),
+        ]
+        for status in (200, 401, 403):
+            for body in bodies:
+                with self.subTest(status=status, body=body):
+                    self.session([FakeResponse(200, self.ORDERS), FakeResponse(status, body)])
+                    result = await self.manual()
+                    self.assertEqual("invalid_credentials", result["errors"]["base"])
+                    self.assertNotIn("QA.ISSUE-1", repr(result))
+
+    async def test_valid_profile_still_supplies_real_name(self):
+        self.session([
+            FakeResponse(200, self.ORDERS),
+            FakeResponse(200, {"status": "success", "data": {
+                "isLoggedIn": True, "firstName": "Synthetic", "lastName": "User",
+                "geoIpCountryCode": "CA",
+            }}),
+        ])
+        result = await self.manual()
+        self.assertEqual("Synthetic User", result["title"])
+
+    async def test_active_order_challenges_and_invalid_responses_are_inconclusive(self):
+        for status in (200, 401, 403):
+            for body in (self.CHALLENGE, '{"error":', [], {},
+                         {"unexpected": True}, {"error": {"code": "SERVER_BUSY"}}):
+                with self.subTest(status=status, body=body):
+                    session = self.session([FakeResponse(status, body)])
+                    result = await self.manual()
+                    self.assertEqual("cannot_connect", result["errors"]["base"])
+                    self.assertEqual(1, len(session.calls))
+
+    async def test_active_order_explicit_auth_errors_reject_without_profile_request(self):
+        for status in (200, 401, 403):
+            for body in (
+                {"data": {"isLoggedIn": False, "orders": []}},
+                *({"error": {"code": code}} for code in
+                  ("UNAUTHORIZED", "SESSION_EXPIRED", "INVALID_TOKEN")),
+            ):
+                with self.subTest(status=status, body=body):
+                    session = self.session([FakeResponse(status, body)])
+                    result = await self.manual()
+                    self.assertEqual("invalid_credentials", result["errors"]["base"])
+                    self.assertEqual(1, len(session.calls))
+
+    async def test_active_orders_require_genuine_success_envelope(self):
+        bodies = [None, [], {}, {"data": {}}, {"data": {"orders": {}}},
+                  {"data": {"orders": [None, "invalid"]}},
+                  {"status": "failure", "data": {"orders": []}},
+                  {"status": "success", "error": {"code": "SERVER_BUSY"},
+                   "data": {"orders": []}}]
+        for body in bodies:
+            with self.subTest(body=body):
+                session = self.session([
+                    FakeResponse(200, body),
+                    FakeResponse(200, {"data": {"isLoggedIn": True}}),
+                ])
+                result = await self.manual()
+                self.assertEqual("form", result["type"])
+                self.assertEqual("cannot_connect", result["errors"]["base"])
+                self.assertEqual(1, len(session.calls))
+
+    async def test_credential_updates_require_orders_but_do_not_fetch_profile(self):
+        for step in ("reauth_confirm", "reconfigure"):
+            for response, expected in (
+                (FakeResponse(200, self.ORDERS), "abort"),
+                (FakeResponse(403, self.CHALLENGE), "cannot_connect"),
+                (FakeResponse(401, {"error": {"code": "UNAUTHORIZED"}}),
+                 "invalid_credentials"),
+            ):
+                with self.subTest(step=step, expected=expected):
+                    session = self.session([response])
+                    entry = FakeEntry("current", const.DOMAIN, "Saved Account", {
+                        const.CONF_ACCOUNT_NAME: "Saved Account",
+                        const.CONF_TIME_ZONE: "America/Toronto",
+                    })
+                    original = dict(entry.data)
+                    flow = config_flow.UberEatsConfigFlow()
+                    flow.hass = FakeHass([entry])
+                    flow.context["entry_id"] = entry.entry_id
+                    result = await getattr(flow, f"async_step_{step}")({
+                        const.CONF_COOKIE: self.COOKIE,
+                    })
+                    if expected == "abort":
+                        self.assertEqual("abort", result["type"])
+                        self.assertEqual(self.COOKIE, result["data"][const.CONF_FULL_COOKIE])
+                        self.assertEqual("Saved Account", result["data"][const.CONF_ACCOUNT_NAME])
+                    else:
+                        self.assertEqual(expected, result["errors"]["base"])
+                        self.assertEqual(original, entry.data)
+                    self.assertEqual(1, len(session.calls))
+
+    async def test_profile_fallback_still_rejects_duplicate_rotated_credentials(self):
+        self.session([
+            FakeResponse(200, self.ORDERS),
+            FakeResponse(403, self.CHALLENGE, {"sid": "QA.EXISTING"}),
+        ])
+        flow = config_flow.UberEatsConfigFlow()
+        flow.hass = FakeHass([FakeEntry("other", const.DOMAIN, "Existing", {
+            const.CONF_SID: "QA.EXISTING",
+        })])
+        result = await flow.async_step_user({
+            const.CONF_COOKIE: self.COOKIE,
+            const.CONF_TIME_ZONE: "America/Mexico_City",
+        })
+        self.assertEqual("abort", result["type"])
+        self.assertEqual("already_configured", result["reason"])
+
+    async def test_profile_cancellation_is_not_swallowed(self):
+        self.session([FakeResponse(200, self.ORDERS), asyncio.CancelledError()])
+        with self.assertRaises(asyncio.CancelledError):
+            await self.manual()
+
+    async def test_generic_accounts_have_distinct_entity_identities(self):
+        hass = FakeHass([])
+        identifiers = []
+        for index, expected_name in enumerate(
+            ("Uber Eats Account", "Uber Eats Account 2", "Uber Eats Account 3")
+        ):
+            self.session([
+                FakeResponse(200, self.ORDERS), FakeResponse(403, self.CHALLENGE),
+            ])
+            flow = config_flow.UberEatsConfigFlow()
+            flow.hass = hass
+            result = await flow.async_step_user({
+                const.CONF_COOKIE: f"sid=QA.ACCOUNT-{index}; uev2.id.session=session-{index}",
+                const.CONF_TIME_ZONE: "America/Mexico_City",
+            })
+            self.assertEqual("create_entry", result["type"])
+            self.assertEqual(expected_name, result["data"][const.CONF_ACCOUNT_NAME])
+            entry = FakeEntry(str(index), const.DOMAIN, result["title"], result["data"])
+            hass.config_entries.entries.append(entry)
+            account_entity = entity.UberEatsCoordinatorEntity(
+                SimpleNamespace(), expected_name, entry.entry_id, "order_status"
+            )
+            identifiers.append(account_entity._attr_unique_id)
+        self.assertEqual(3, len(set(identifiers)))
+        self.assertEqual("Uber Eats Account", hass.config_entries.entries[0].title)
+
+    async def test_generic_name_avoids_current_and_legacy_entity_keys(self):
+        current = FakeEntry("current", const.DOMAIN, "Renamed display title", {
+            const.CONF_ACCOUNT_NAME: "Uber Eats Account 2",
+        })
+        original = dict(current.data)
+        for saved_name in ("Uber_Eats_Account", "", None, "  "):
+            with self.subTest(saved_name=saved_name):
+                legacy = legacy_entry(title="Uber_Eats_Account", **{
+                    const.CONF_ACCOUNT_NAME: saved_name,
+                })
+                self.session([
+                    FakeResponse(200, self.ORDERS), FakeResponse(403, self.CHALLENGE),
+                ])
+                flow = config_flow.UberEatsConfigFlow()
+                flow.hass = FakeHass([current, legacy])
+                result = await flow.async_step_user({
+                    const.CONF_COOKIE: self.COOKIE,
+                    const.CONF_TIME_ZONE: "America/Mexico_City",
+                })
+                self.assertEqual("Uber Eats Account 3", result["data"][const.CONF_ACCOUNT_NAME])
+                self.assertEqual(original, current.data)
+                self.assertEqual("Uber_Eats_Account", legacy.title)
 
 
 class AuthenticationLifecycleTests(unittest.IsolatedAsyncioTestCase):

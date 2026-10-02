@@ -59,33 +59,38 @@ class CredentialValidationResult:
 async def _probe_active_orders(client: UberEatsApiClient) -> None:
     """Validate credentials using the normal active-order operation."""
     response = await client.active_orders()
-    if response.status in (401, 403):
+    if response.status in (200, 401, 403) and auth_error_code(response.body):
         raise CredentialProbeRejected
     if response.status != 200:
         raise CredentialProbeUnavailable
-    if auth_error_code(response.body):
-        raise CredentialProbeRejected
     try:
-        raw_active_orders(response.body)
+        orders = raw_active_orders(response.body)
     except MalformedUberResponse as err:
         raise CredentialProbeUnavailable from err
+    if (
+        response.body.get("status", "success") != "success"
+        or response.body.get("error") is not None
+        or len(orders) != len(response.body["data"]["orders"])
+    ):
+        raise CredentialProbeUnavailable
 
 
 async def _probe_profile(client: UberEatsApiClient) -> dict[str, Any]:
-    """Read identity data used to title a newly created entry."""
+    """Read optional identity data, preserving explicit session rejections."""
     response = await client.user_profile()
-    if response.status in (401, 403):
+    if response.status in (200, 401, 403) and auth_error_code(response.body):
         raise CredentialProbeRejected
     if response.status != 200:
         raise CredentialProbeUnavailable
-    if auth_error_code(response.body):
-        raise CredentialProbeRejected
+    if (
+        not isinstance(response.body, dict)
+        or response.body.get("status", "success") != "success"
+        or response.body.get("error") is not None
+    ):
+        raise CredentialProbeUnavailable
     profile = parse_profile(response.body, require_logged_in=True)
     if profile is not None:
         return profile
-    data = response.body.get("data") if isinstance(response.body, dict) else None
-    if isinstance(data, dict) and data.get("isLoggedIn") is False:
-        raise CredentialProbeRejected
     raise CredentialProbeUnavailable
 
 
@@ -101,7 +106,16 @@ async def _validate_credentials(
         async_get_clientsession(hass), credentials, time_zone
     )
     await _probe_active_orders(client)
-    profile = await _probe_profile(client) if include_profile else None
+    profile = None
+    if include_profile:
+        try:
+            profile = await _probe_profile(client)
+        except CredentialProbeRejected:
+            raise
+        except Exception as err:
+            # Orders have already proved the session valid. Profile metadata
+            # may be blocked, malformed, or temporarily unreachable.
+            _LOGGER.debug("Optional profile probe unavailable: %s", type(err).__name__)
     return CredentialValidationResult(client.credentials, profile)
 
 
@@ -174,6 +188,22 @@ class UberEatsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
             for entry in self.hass.config_entries.async_entries(DOMAIN)
         )
+
+    def _fallback_account_name(self) -> str:
+        """Choose a generic name without colliding with existing entity IDs."""
+        used_keys = set()
+        for domain in (DOMAIN, LEGACY_DOMAIN):
+            for entry in self.hass.config_entries.async_entries(domain):
+                name = entry.data.get(CONF_ACCOUNT_NAME)
+                if not isinstance(name, str) or not name.strip():
+                    name = entry.title
+                used_keys.add(name.replace(" ", "_"))
+        name = "Uber Eats Account"
+        suffix = 2
+        while name.replace(" ", "_") in used_keys:
+            name = f"Uber Eats Account {suffix}"
+            suffix += 1
+        return name
 
     @staticmethod
     def _legacy_credentials(
@@ -278,7 +308,7 @@ class UberEatsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     "Legacy credential probe temporarily unavailable: %s",
                     type(err).__name__,
                 )
-        if validation is None or validation.profile is None:
+        if validation is None:
             return self.async_show_form(
                 step_id="legacy_import",
                 data_schema=vol.Schema(
@@ -291,13 +321,13 @@ class UberEatsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         credentials = validation.credentials
         if self._current_credentials_exist(credentials):
             return self.async_abort(reason="already_configured")
-        profile = validation.profile
+        profile = validation.profile or {}
         profile_title = " ".join(
-            part for part in (profile["first_name"], profile["last_name"]) if part
+            part for part in (profile.get("first_name"), profile.get("last_name")) if part
         )
         account_name = legacy_entry.data.get(CONF_ACCOUNT_NAME)
         if not isinstance(account_name, str) or not account_name.strip():
-            account_name = legacy_entry.title or profile_title or "Uber Eats Account"
+            account_name = legacy_entry.title or profile_title or self._fallback_account_name()
         title = legacy_entry.title or account_name
         return self.async_create_entry(
             title=title,
@@ -341,17 +371,15 @@ class UberEatsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     errors["base"] = "cannot_connect"
                 else:
                     credentials = validation.credentials
-                    profile = validation.profile
-                    if profile is None:
-                        errors["base"] = "cannot_connect"
-                    elif self._current_credentials_exist(credentials):
+                    profile = validation.profile or {}
+                    if self._current_credentials_exist(credentials):
                         return self.async_abort(reason="already_configured")
                     else:
                         title = " ".join(
                             part
-                            for part in (profile["first_name"], profile["last_name"])
+                            for part in (profile.get("first_name"), profile.get("last_name"))
                             if part
-                        ) or "Uber Eats Account"
+                        ) or self._fallback_account_name()
                         return self.async_create_entry(
                             title=title,
                             data={

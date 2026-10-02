@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
 from typing import Any
 
 from .protocol import (
@@ -46,5 +47,14 @@ class UberEatsApiClient:
         headers = {**REQUEST_HEADERS, "Cookie": self.credentials.header()}
         async with self._session.post(url, json=payload, headers=headers) as response:
             self.credentials = self.credentials.rotated(response.cookies)
-            body = await response.json() if response.status == 200 else None
+            body = None
+            if response.status == 200:
+                body = await response.json()
+            elif response.status in (401, 403):
+                # Preserve JSON auth errors without mistaking HTML challenges
+                # (or broken JSON) for a definitive credential rejection.
+                try:
+                    body = json.loads(await response.text())
+                except ValueError:
+                    pass
             return UberResponse(response.status, body, self.credentials)
