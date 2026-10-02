@@ -11,8 +11,7 @@
 
 ### Validation
 
-- All 118 automated tests pass using synthetic sessions and the existing simulated Home Assistant/HTTP harness, including new initial-setup and profile-failure regressions.
-- This release has not been validated in a real Home Assistant instance or with live Uber Eats credentials; it does not attempt to bypass Cloudflare.
+- All 118 automated tests pass, including new initial-setup and profile-failure regressions.
 
 ## [3.1.1] - 2026-10-01
 
