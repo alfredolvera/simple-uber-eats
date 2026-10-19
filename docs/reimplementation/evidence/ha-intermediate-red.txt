@@ -1,0 +1,45 @@
+.E....E..
+======================================================================
+ERROR: test_tracker_unknown_and_cleanup (test_ha_runtime.LifecycleTests.test_tracker_unknown_and_cleanup)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/usr/lib64/python3.14/asyncio/runners.py", line 127, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/usr/lib64/python3.14/asyncio/base_events.py", line 719, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "/tmp/simple-uber-eats-v4-new/tests/test_ha_runtime.py", line 152, in test_tracker_unknown_and_cleanup
+    entity=tracker.CourierTracker(coordinator,entry)
+  File "/tmp/simple-uber-eats-v4-new/custom_components/simple_uber_eats/device_tracker.py", line 21, in __init__
+    super().__init__(coordinator,entry,'courier_tracker')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/simple-uber-eats-v4-new/custom_components/simple_uber_eats/account.py", line 34, in __init__
+    super().__init__(coordinator)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+TypeError: object.__init__() takes exactly one argument (the instance to initialize)
+
+======================================================================
+ERROR: test_privacy_defaults_off (test_ha_runtime.RuntimeTests.test_privacy_defaults_off)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/usr/lib64/python3.14/asyncio/runners.py", line 127, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/usr/lib64/python3.14/asyncio/base_events.py", line 719, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "/tmp/simple-uber-eats-v4-new/tests/test_ha_runtime.py", line 117, in test_privacy_defaults_off
+    entity = sensor.UberSensor(self.coordinator,self.entry,'courier')
+  File "/tmp/simple-uber-eats-v4-new/custom_components/simple_uber_eats/sensor.py", line 16, in __init__
+    super().__init__(coordinator, entry, role)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/simple-uber-eats-v4-new/custom_components/simple_uber_eats/account.py", line 34, in __init__
+    super().__init__(coordinator)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+TypeError: object.__init__() takes exactly one argument (the instance to initialize)
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.030s
+
+FAILED (errors=2)

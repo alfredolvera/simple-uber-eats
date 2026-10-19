@@ -68,7 +68,8 @@ authoritative value remains available in the `arrival_time` attribute.
 Dashboards can calculate a local countdown from this timestamp if desired.
 
 Fresh installations display the retained entities as **Restaurant**,
-**Courier**, and **ETA**. Their released unique IDs remain stable.
+**Courier**, and **ETA**. Version 4 migrates existing entity registry identifiers
+to account-entry identifiers while preserving entity IDs, custom names and labels.
 
 For accounts with multiple simultaneous orders, the entities represent the first active order returned by Uber. Each config entry has its own independent entity set.
 
@@ -363,27 +364,53 @@ starts its reauthentication flow and asks for a fresh Uber Eats session.
 ## Privacy and security
 
 - Only `sid` and `uev2.id.session` are stored locally in the Home Assistant config entry and sent to Uber's endpoints as the minimum Cookie header.
+- Courier phone and picture attributes are disabled by default. Enable either independently in the integration's **Options** if needed. Enabling them can record another person's details in Recorder and backups; disabling them does not erase previously recorded history.
+- Each account uses isolated cookie storage while sharing Home Assistant's connection pool, so server cookies cannot replace another account's credentials.
 - Downloadable diagnostics omit cookies, authentication headers, session identifiers, names, addresses, and raw courier coordinates.
 - Smooth playback remains local after Uber telemetry has been received and creates no extra Uber requests.
 - This project is unofficial and is not affiliated with, endorsed by, or supported by Uber.
 
 ## Development
 
-Simple Uber Eats 3.0 is maintained by **alfredolvera**.
+Simple Uber Eats is maintained by **alfredolvera**.
 
-The 3.0 implementation was developed with **OpenAI Codex**, which performed code implementation and refactoring under human direction, review, and live testing.
+Version 4 replaces the runtime and behavioral tests with a new implementation
+authored by separate Codex agents from a recorded functional specification.
+Implementers were instructed not to consult predecessor source or tests. The
+specification author and reviewer had inspected the earlier implementation;
+that exposure is explicitly recorded in [PROVENANCE.md](PROVENANCE.md).
 
-Architecture decisions, requirements, testing against real Uber Eats orders, and release decisions were directed and validated by alfredolvera.
+The specification, author access reports, review corrections and verification
+records are in [docs/reimplementation](docs/reimplementation). These describe
+the actual process and its limits; earlier releases are not retroactively
+represented as having been written in isolation.
+
+Run the replacement tests with Python 3.14:
+
+```sh
+python -m venv .venv
+.venv/bin/python -m pip install -r requirements-dev.txt
+.venv/bin/python -m unittest discover -s tests -v
+.venv/bin/ruff check custom_components tests
+```
+
+Automated synthetic tests are separate from testing a real Uber session and
+active order. See the verification record for what has actually been checked.
 
 ## Credits / History
 
 This project originated from [zodyking's Uber Eats order tracker](https://github.com/zodyking/uber-eats-order-tracker). [Jwsoat](https://github.com/Jwsoat) later maintained and improved the integration, including important authentication and session work.
 
-The current project is maintained by [alfredolvera](https://github.com/alfredolvera). Version 3.0 is an independently reimplemented native-entity architecture with adaptive polling, sanitized diagnostics, and smooth native courier tracking. See [PROVENANCE.md](PROVENANCE.md) for the concise release-tree provenance statement.
+The current project is maintained by [alfredolvera](https://github.com/alfredolvera).
+The development history and version 4 replacement process are documented in
+[PROVENANCE.md](PROVENANCE.md). Historical credits do not imply that the
+predecessor authors granted a license to their code.
 
 ## License
 
-Simple Uber Eats 3.x is available under the [MIT License](LICENSE).
+The version 4 implementation is offered under the [MIT License](LICENSE).
+See [PROVENANCE.md](PROVENANCE.md) for the scope of that statement and the
+unresolved provenance question concerning earlier releases.
 
 ## Maintainer
 

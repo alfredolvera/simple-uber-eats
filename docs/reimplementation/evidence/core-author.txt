@@ -1,0 +1,199 @@
+Core independent author record — 2026-10-19
+
+Scope and boundary
+- Dispatched with a new task context. First filesystem read: SPEC.md and PLAN.md
+  in /tmp/simple-uber-eats-v4-new. All shell calls explicitly set that workdir.
+- Did not inspect original workspace/repository, predecessor implementation or
+  tests, Git history, sibling projects, upstream source, or prior conversations.
+- Specification and plan were supplied by the exposed parent author. This is
+  independent implementation from that specification, not a claim that the
+  entire project/specification originated without predecessor exposure.
+- Parent follow-up corrected ETA acceptance to 5 minutes past / 12 hours future
+  and required holding safe GPS position across >60 second telemetry gaps.
+- Other parent/HA-agent messages supplied installed interpreter path and shared
+  contract notes. No predecessor code was supplied in those messages.
+
+Consulted material
+- SPEC.md and PLAN.md, read in full initially. Parent correction used as above.
+- Supplied instructions and skills: using-superpowers/SKILL.md (its subagent
+  exclusion applies), test-driven-development/SKILL.md,
+  verification-before-completion/SKILL.md, systematic-debugging/SKILL.md,
+  test-driven-development/writing-good-tests.md. Last combined skill output was
+  truncated by output budget; no unreturned material is claimed as consulted.
+  Skill root /var/home/alfredo/.codex/plugins/cache/openai-curated-remote/
+  superpowers/6.4.2/skills/. Skills are procedural, not predecessor sources.
+- No external protocol captures, official websites, upstream repositories,
+  external documentation, or historical sources were read. API use was authored
+  from the supplied interface contract and Python/aiohttp knowledge, tested
+  against installed aiohttp and Home Assistant dependencies.
+- Full newly authored test-suite output was read; no other agent's source files
+  were inspected by this author.
+
+Authored runtime files
+custom_components/simple_uber_eats/model.py
+custom_components/simple_uber_eats/web_session.py
+custom_components/simple_uber_eats/wire.py
+custom_components/simple_uber_eats/motion.py
+
+Authored tests/evidence
+ tests/test_core_contract.py
+ evidence/core-author.txt
+ evidence/core-red.txt
+ evidence/core-red-edge.txt
+ evidence/core-red-quoted.txt
+ evidence/core-green.txt
+ evidence/core-full-suite.txt
+
+Command ledger (all workdir /tmp/simple-uber-eats-v4-new)
+1. cat SPEC.md PLAN.md: read supplied specification/plan.
+2. cat the three initial procedural SKILL.md files listed above.
+3. mkdir -p tests evidence custom_components/simple_uber_eats; write synthetic
+   tests first with shell heredoc. python -m unittest discover -s tests
+   -p 'test_core_*.py' -v > evidence/core-red.txt 2>&1: observed missing
+   replacement_core.model import error before any core implementation existed.
+   This was missing implementation, not a behavioral assertion failure.
+4. Parent correction incorporated into tests before implementation. New core
+   modules then authored using shell heredocs/Python literal file edits.
+5. System python test attempt: failed because aiohttp not installed in system
+   Python; preserved actual failure in tool output. This was environmental.
+6. /tmp/simple-uber-eats-v4-venv/bin/python -m unittest discover -s tests
+   -p 'test_core_*.py' -v: initial 18 cases passed with installed aiohttp.
+7. Added cookie-body confusion / quoted-value / first-status regression tests;
+   same test command redirected to evidence/core-red-edge.txt: observed 4
+   assertion failures plus one quoted-value CookieInputError (21 test methods).
+8. Read debugging and writing-good-tests procedural material. Root causes:
+   cURL scanner failed to consume body/URL arguments; cookie validator disallowed
+   valid quoted content; empty first status dict incorrectly evaluated as absent.
+9. Implemented bounded cURL option parser, safe cookie serialization, status
+   sentinel. Re-ran core tests: 21 passed.
+10. Added quoted trailing whitespace test. Same command redirected to
+    evidence/core-red-quoted.txt: 1 expected assertion failure (22 methods).
+11. Implemented quote-aware cookie splitting with SimpleCookie value decoding.
+    Core tests: 22 passed. Ruff reported import/re-alias/unused-import findings.
+12. /tmp/simple-uber-eats-v4-venv/bin/ruff check --fix <the 4 owned core files>
+    tests/test_core_contract.py; ruff format same files: mechanical cleanup.
+13. /tmp/simple-uber-eats-v4-venv/bin/python -m unittest discover -s tests
+    -p 'test_core_*.py' -v > evidence/core-green.txt 2>&1: 22 passed.
+14. /tmp/simple-uber-eats-v4-venv/bin/python -m compileall -q <4 core files>
+    tests/test_core_contract.py: passed.
+15. /tmp/simple-uber-eats-v4-venv/bin/ruff check <4 core files>
+    tests/test_core_contract.py: All checks passed.
+16. /tmp/simple-uber-eats-v4-venv/bin/python -m unittest discover -s tests -v
+    > evidence/core-full-suite.txt 2>&1: all 36 current core+HA tests passed.
+    Upstream Home AssistantApplication DeprecationWarning and asyncio slow-task
+    diagnostic appeared; no failures. HA tests were executed, not source-read.
+17. Wrote this evidence record. No commit, publication or upstream outreach.
+
+Coverage and remaining validation
+- 22 core methods cover input formats, duplicate conflicts, quoted/encoded values,
+  input injection, cookie rotation, raw envelope and protocol auth handling,
+  visible status, status fallback, optional profile, malformed nested items,
+  freshest courier, timestamp unit normalization/dedup, GPS validation, ETA
+  midnight/meridiem/DST gap, interpolation, history merging, monotonic display,
+  missing telemetry, reset and >60 second gap hold/resumption.
+- HTTP seam is a synthetic async context-manager client; real aiohttp installed
+  and ClientTimeout used, but no real endpoint or network request was performed.
+- No live Uber account/order, production HA deployment, HACS validation, or
+  authentication with real credentials was performed or is claimed.
+- No design claim of a legally certified clean room; context/working-directory
+  and source-consultation limits above are the actual evidence.
+
+Postfreeze compatibility correction record — 2026-10-19
+- Parent requested compatibility corrections after performing a separate
+  black-box differential comparison with historical runtime. Parent supplied
+  functional observations only: whitespace-normalized visible status, 512 KiB
+  UTF-8 auth-input limit, malformed Unicode rejection, POSIX comments excluded
+  from credentials, inert --config option support, dotted meridiem, numeric
+  coordinate/timestamp strings. No historical implementation/test source or
+  snippets were supplied or read by this author. Prior independent-context
+  limits still apply; these corrections are explicitly specification updates
+  informed by the exposed parent's behavioral comparison.
+- Re-read only this author's web_session.py, wire.py and test_core_contract.py.
+- Authored tests/test_core_compatibility.py before changing runtime. Core command
+  `/tmp/simple-uber-eats-v4-venv/bin/python -m unittest discover -s tests
+  -p 'test_core_*.py' -v > evidence/core-postfreeze-red.txt 2>&1`
+  observed 18 assertion failures and 2 errors across 30 methods. One error was
+  the unsupported --config behavior; the other was a test variable assertion
+  outside subTest after the same expected parse error. Fixed that test layout
+  without relaxing the intended assertion.
+- Root causes: summary returned raw whitespace; no browser-input byte/Unicode
+  guard; shlex's default comments=False; allowlist lacked inert config options;
+  ETA regex lacked dotted suffixes; numeric conversion excluded strings.
+- Updated only web_session.py and wire.py: validate UTF-8 and byte bound, validate
+  constructor Unicode, ignore --config/-K arguments without file access, normalize
+  visible status whitespace only, accept dotted meridiem and finite numeric
+  strings. Opaque cookie contents retained; booleans/nonfinite data still reject.
+- Initial comment fix used shlex comments=True. Before finalizing, authored an
+  extra synthetic regression for URL fragments and literal unquoted hash content.
+  Command with -p 'test_core_compatibility.py' redirected to
+  evidence/core-postfreeze-shell-red.txt: 2 expected parse errors across 9 cases.
+  Root cause: shlex comments=True treats # within an existing word as comment.
+  Replaced this with a quote/escape-aware inert comment-removal pass that marks
+  comments only at word boundaries before standard shlex token parsing.
+- Core command redirected to evidence/core-postfreeze-green.txt: 31 passed.
+- Ruff check/format of owned files: initial SIM117 test-style finding fixed by
+  combining context managers; final ruff check of 4 core modules and both core
+  test files: All checks passed.
+- compileall -q of owned files: passed; final source unchanged after this check
+  except test-only context-manager formatting.
+- Full suite command `python -m unittest discover -s tests -v`, using same venv,
+  redirected to evidence/core-postfreeze-full-suite.txt: 54 tests, 1 error in
+  test_ha_framework.FrameworkTests.test_public_entity_compatibility_names_and_attributes
+  (KeyError active_orders_count). This was reported to parent; HA work remains
+  concurrent and the core author did not change HA files.
+- Additional authored files: tests/test_core_compatibility.py and four
+  evidence/core-postfreeze-{red,shell-red,green,full-suite}.txt logs.
+- No upstream/network/real-account validation or publication performed.
+
+Second postfreeze contract correction — 2026-10-19
+- Parent supplied further functional observations only: browser sid must begin
+  QA., browser session must contain hyphen, trim required browser values; preserve
+  opaque constructor/rotation behavior. Parent requested AuthRejected.http_status
+  optional int attribute (None for protocol rejection, HTTP status for 401/403)
+  so HA can restore its consecutive-failure policy separately.
+- Added browser-only shape/trim and Gateway auth-status tests before runtime
+  changes. Core compatibility run redirected to evidence/core-auth-policy-red.txt:
+  observed 3 assertion failures and missing-http_status AttributeError (11 tests).
+- Implemented parse-only shape checks and trimming before duplicate comparison;
+  constructor/rotation remain opaque but control-free/valid Unicode. Added
+  AuthRejected(http_status=None), set status only on actual HTTP401/403 responses.
+- Updated browser-parser synthetic fixtures to QA./hyphen formats. This replaces
+  the former quoted-outer-whitespace preservation assertion with trimming per
+  the explicitly corrected browser contract. Internal quoted content remains
+  intact. Test server/constructor fixtures intentionally remain arbitrary opaque
+  tokens to cover the separate contract. HA author notified of constructor API.
+- Core test command using HA venv redirected to evidence/core-auth-policy-green.txt:
+  all 33 core tests passed. compileall of 4 runtime and 2 core test files passed.
+  Ruff check of same 6 files: All checks passed.
+- Full-suite run started, redirected to evidence/core-auth-policy-full-suite.txt.
+  The test runner reported the real coordinator review test passed, then remained
+  running without output. Parent notified with execution session id 90515.
+  No full-suite completion is claimed in this record. Review source not inspected.
+- Additional authored evidence logs: core-auth-policy-{red,green,full-suite}.txt.
+  This appendix plus preceding records retain every test outcome and the changed
+  functional specification provenance. No historical source inspection occurred.
+
+Third postfreeze protocol fact correction — 2026-10-19
+- Exposed parent specification author corrected optional profile URL from
+  /api/getUserV1 to /_p/api/getUserV1, following the parent's public-runtime
+  compatibility audit. No historical source or test snippets were read by this
+  author; this is a documented correction of the original SPEC endpoint fact.
+- Added independent exact profile URL/body/account-label assertion in
+  tests/test_core_compatibility.py before implementation. HA-venv core unittest
+  command redirected to evidence/core-profile-path-red.txt: 34 tests, 1 expected
+  failure showing the old URL lacked /_p. Changed Gateway private request helper
+  to accept explicit path, retaining /api/getActiveOrdersV1 for orders and using
+  /_p/api/getUserV1 for profile. Optional profile fallback is unchanged.
+- Ruff format of wire.py/test_core_compatibility.py and Ruff check of all 6
+  owned runtime/test files: passed. compileall -q of same files passed.
+- HA-venv `python -m unittest discover -s tests -p 'test_core_*.py' -v`, redirected
+  to evidence/core-profile-path-green.txt: all 34 core cases passed.
+- Full suite redirected to evidence/core-profile-path-full-suite.txt is still
+  running after 10 seconds (session 13680); no completed-full-suite claim made.
+  Parent advised previously of review-fixture hanging behavior.
+- Only wire.py, test_core_compatibility.py and core evidence were modified.
+- Reading the new full-suite log tail then showed an in-progress adoption-review
+  failure: test_review_adoption_real.AdoptionChecks.
+  test_explicit_unloaded_adoption_keeps_device_entity_and_labels raised KeyError
+  'sensor.preserved_eta' through compatibility.py / async_update_entity_platform.
+  Reported this exact external-to-core failure to parent; runner still active.

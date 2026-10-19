@@ -1,0 +1,18 @@
+COMMAND: /tmp/simple-uber-eats-v4-venv/bin/ruff check /tmp/simple-uber-eats-v4-new/custom_components/simple_uber_eats/__init__.py /tmp/simple-uber-eats-v4-new/custom_components/simple_uber_eats/account.py /tmp/simple-uber-eats-v4-new/custom_components/simple_uber_eats/binary_sensor.py /tmp/simple-uber-eats-v4-new/custom_components/simple_uber_eats/compatibility.py /tmp/simple-uber-eats-v4-new/custom_components/simple_uber_eats/config_flow.py /tmp/simple-uber-eats-v4-new/custom_components/simple_uber_eats/const.py /tmp/simple-uber-eats-v4-new/custom_components/simple_uber_eats/device_tracker.py /tmp/simple-uber-eats-v4-new/custom_components/simple_uber_eats/diagnostics.py /tmp/simple-uber-eats-v4-new/custom_components/simple_uber_eats/http.py /tmp/simple-uber-eats-v4-new/custom_components/simple_uber_eats/runtime.py /tmp/simple-uber-eats-v4-new/custom_components/simple_uber_eats/sensor.py /tmp/simple-uber-eats-v4-new/custom_components/simple_uber_eats/settings.py /tmp/simple-uber-eats-v4-new/tests/test_ha_runtime.py /tmp/simple-uber-eats-v4-new/tests/test_ha_framework.py
+All checks passed!
+EXIT: 0
+COMMAND: /tmp/simple-uber-eats-v4-venv/bin/python -m compileall -q custom_components tests
+EXIT: 0
+COMMAND: /tmp/simple-uber-eats-v4-venv/bin/python -m unittest discover -s tests -p test_ha_*.py
+/tmp/simple-uber-eats-v4-venv/lib64/python3.14/site-packages/homeassistant/components/http/server.py:156: DeprecationWarning: Inheritance class HomeAssistantApplication from web.Application is discouraged
+  class HomeAssistantApplication(web.Application):
+Executing <Task pending name='Task-2' coro=<FrameworkTests.test_account_session_has_no_cookie_storage_and_detaches() running at /tmp/simple-uber-eats-v4-new/tests/test_ha_framework.py:216> cb=[_run_until_complete_cb() at /usr/lib64/python3.14/asyncio/base_events.py:181] created at /usr/lib64/python3.14/asyncio/runners.py:109> took 0.639 seconds
+...............................
+----------------------------------------------------------------------
+Ran 31 tests in 0.724s
+
+OK
+EXIT: 0
+VALID JSON: strings.json
+VALID JSON: icons.json
+VALID JSON: translations/en.json

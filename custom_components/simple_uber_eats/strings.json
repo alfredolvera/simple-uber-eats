@@ -1,74 +1,73 @@
 {
+  "title": "Simple Uber Eats",
   "config": {
     "step": {
       "user": {
-        "title": "Authentication",
-        "description": "Simple Uber Eats connects through an Uber Eats browser session that is already signed in. Your Uber password and verification codes are never requested.\n\n1. Open [Uber Eats]({uber_eats_url}) in a desktop browser and sign in normally.\n2. Open Developer Tools → **Network**, reload the page, and filter for `getActiveOrdersV1`.\n3. Right-click that request and choose **Copy → Copy as cURL**.\n4. Paste the entire copied request below without editing it.\n\nThe pasted request is sensitive. Simple Uber Eats parses it locally, keeps only `sid` and `uev2.id.session`, and immediately discards every other header, cookie, URL, and body value.",
+        "title": "Connect Uber Eats",
+        "description": "Paste the authenticated Uber Eats Cookie header or POSIX Copy as cURL. Only the two required session cookies are stored.",
         "data": {
-          "time_zone": "Time zone",
-          "cookie": "Uber Eats session"
+          "cookie": "Cookie or Copy as cURL",
+          "time_zone": "Time zone"
         },
-        "data_description": {
-          "time_zone": "This must match Home Assistant's configured time zone. The correct value is selected automatically; normally you should not change it.",
-          "cookie": "Paste the complete Copy as cURL request. Copied request headers, a complete Cookie header, or a raw cookie string are also accepted. This field contains sensitive session information."
-        }
-      },
-      "legacy_select": {
-        "title": "Choose an existing Uber Eats account",
-        "description": "Multiple legacy Uber Eats configurations were found. Choose the account to import into Simple Uber Eats.",
-        "data": {
-          "legacy_entry": "Existing account"
-        }
-      },
-      "legacy_import": {
-        "title": "Import existing Uber Eats configuration",
-        "description": "An existing configuration for {account_name} was found. Import it into Simple Uber Eats? Credentials are validated without being displayed, and the legacy entry is not removed.",
-        "data": {
-          "confirm_import": "Import this account"
-        }
-      },
-      "reconfigure": {
-        "title": "Update Uber Eats credentials",
-        "description": "Replace the browser session for {account_name}.\n\n1. Sign in to [Uber Eats]({uber_eats_url}).\n2. Open Developer Tools → **Network**, reload, and filter for `getActiveOrdersV1`.\n3. Right-click the request and choose **Copy → Copy as cURL**.\n4. Paste the entire copied request below without editing it.\n\nTreat the copied request like a password. Only the two required session credentials are retained.",
-        "data": {
-          "cookie": "Uber Eats session"
-        },
-        "data_description": {
-          "cookie": "Paste the complete Copy as cURL request or another supported session format. This field contains sensitive session information."
+        "menu_options": {
+          "connect": "Connect using cookies",
+          "import_legacy": "Import an existing Uber Eats account"
         }
       },
       "reauth_confirm": {
-        "title": "Reconnect Uber Eats",
-        "description": "The saved session for {account_name} is no longer accepted.\n\n1. Sign in to [Uber Eats]({uber_eats_url}).\n2. Open Developer Tools → **Network**, reload, and filter for `getActiveOrdersV1`.\n3. Right-click the request and choose **Copy → Copy as cURL**.\n4. Paste the entire copied request below without editing it.\n\nTreat the copied request like a password. Only the two required session credentials are retained.",
+        "title": "Renew Uber Eats session",
+        "description": "Paste the authenticated Uber Eats Cookie header or POSIX Copy as cURL. Only the two required session cookies are stored.",
         "data": {
-          "cookie": "Uber Eats session"
-        },
-        "data_description": {
-          "cookie": "Paste the complete Copy as cURL request or another supported session format. This field contains sensitive session information."
+          "cookie": "Cookie or Copy as cURL",
+          "time_zone": "Time zone"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure Uber Eats",
+        "description": "Paste the authenticated Uber Eats Cookie header or POSIX Copy as cURL. Only the two required session cookies are stored.",
+        "data": {
+          "cookie": "Cookie or Copy as cURL",
+          "time_zone": "Time zone"
+        }
+      },
+      "connect": {
+        "title": "Connect Uber Eats",
+        "description": "Paste the authenticated Uber Eats Cookie header or POSIX Copy as cURL. Only the two required session cookies are stored.",
+        "data": {
+          "cookie": "Cookie or Copy as cURL",
+          "time_zone": "Time zone"
+        }
+      },
+      "import_legacy": {
+        "title": "Import existing Uber Eats account",
+        "description": "Select an existing legacy account. Its cookies are validated before creating a new account. The old configuration entry is kept. Unloaded entities can retain their entity IDs when no conflicts exist. Loaded or conflicting entities keep their original registration.",
+        "data": {
+          "legacy_entry_id": "Legacy account"
         }
       }
     },
-    "abort": {
-      "already_configured": "This Uber Eats account is already configured.",
-      "legacy_entry_unavailable": "The selected legacy Uber Eats configuration is no longer available.",
-      "reauth_successful": "The Uber Eats account was reconnected.",
-      "reconfigure_successful": "The Uber Eats credentials were updated."
-    },
     "error": {
-      "session_input_not_found": "No recognizable copied request, Cookie header, or raw cookie string was found.",
-      "session_input_too_large": "The copied request is too large. Copy one Uber Eats request again and paste it without combining it with other requests.",
-      "malformed_session_input": "The copied request is malformed or does not contain a recognizable Cookie header.",
-      "ambiguous_session_input": "Multiple Cookie headers contain conflicting session credentials. Copy one request again without editing it.",
-      "sid_not_found": "The Cookie header was found, but it does not contain an sid credential.",
-      "invalid_sid": "The sid credential is not in the expected Uber session format.",
-      "session_not_found": "The Cookie header was found, but it does not contain uev2.id.session.",
-      "invalid_session": "The uev2.id.session credential is not in the expected format.",
-      "invalid_time_zone": "Choose the time zone currently used by Home Assistant.",
-      "invalid_credentials": "Uber Eats did not accept this browser session.",
-      "already_configured": "These Uber Eats credentials are already used by another configured account.",
-      "cannot_connect": "Simple Uber Eats could not validate the session because Uber Eats is temporarily unavailable. Try again later.",
-      "legacy_entry_unavailable": "Choose an available legacy Uber Eats configuration.",
-      "legacy_invalid_credentials": "Uber Eats did not accept the saved legacy session. Skip the import and paste a current copied request if needed."
+      "invalid_cookie": "Supply valid sid and uev2.id.session cookies.",
+      "invalid_timezone": "Select a valid IANA time zone.",
+      "invalid_auth": "Uber Eats rejected this session. Sign in again and copy fresh cookies.",
+      "cannot_connect": "Uber Eats is temporarily unavailable. Try again later."
+    },
+    "abort": {
+      "reauth_successful": "Session renewed.",
+      "reconfigure_successful": "Configuration updated.",
+      "no_legacy_entries": "No eligible legacy accounts found."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Courier privacy",
+        "description": "Phone and photo attributes are off by default. Enabling them can store personal courier information in Home Assistant Recorder and backups. Turning them off does not erase existing history. Configure Recorder exclusions if needed.",
+        "data": {
+          "courier_phone": "Expose courier phone",
+          "courier_photo": "Expose courier photo"
+        }
+      }
     }
   },
   "entity": {
@@ -81,7 +80,7 @@
       }
     },
     "sensor": {
-      "order_status": {
+      "status": {
         "name": "Order status"
       },
       "eta": {

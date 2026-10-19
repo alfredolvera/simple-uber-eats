@@ -1,0 +1,7 @@
+Historical baseline: 714bd968c555e909cd5fdefe19ddab8f7ae6e85a (3.1.2)
+Baseline suite: 118 tests, passed.
+Black-box calls observed from synthetic baseline tests: 199.
+Compared cookie input acceptance, parsed ETA timestamps and normalized order fields.
+Final mismatches: 0.
+Implementers received behavioral observations, never predecessor source or test code.
+These observations do not claim exhaustive equivalence for all possible inputs.

@@ -1,0 +1,24 @@
+test_core_contract (unittest.loader._FailedTest.test_core_contract) ... ERROR
+
+======================================================================
+ERROR: test_core_contract (unittest.loader._FailedTest.test_core_contract)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_core_contract
+Traceback (most recent call last):
+  File "/usr/lib64/python3.14/unittest/loader.py", line 426, in _find_test_path
+    module = self._get_module_from_name(name)
+  File "/usr/lib64/python3.14/unittest/loader.py", line 367, in _get_module_from_name
+    __import__(name)
+    ~~~~~~~~~~^^^^^^
+  File "/tmp/simple-uber-eats-v4-new/tests/test_core_contract.py", line 18, in <module>
+    model = importlib.import_module(PACKAGE + '.model')
+  File "/usr/lib64/python3.14/importlib/__init__.py", line 88, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ModuleNotFoundError: No module named 'replacement_core.model'
+
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+FAILED (errors=1)

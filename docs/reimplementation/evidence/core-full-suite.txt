@@ -1,0 +1,44 @@
+test_cookie_data_cannot_be_reinterpreted_as_option (test_core_contract.Cookies.test_cookie_data_cannot_be_reinterpreted_as_option) ... ok
+test_formats_and_repr (test_core_contract.Cookies.test_formats_and_repr) ... ok
+test_quoted_and_encoded (test_core_contract.Cookies.test_quoted_and_encoded) ... ok
+test_quoted_value_roundtrip (test_core_contract.Cookies.test_quoted_value_roundtrip) ... ok
+test_quoted_whitespace_is_preserved (test_core_contract.Cookies.test_quoted_whitespace_is_preserved) ... ok
+test_rotation_atomic_validated_and_partial (test_core_contract.Cookies.test_rotation_atomic_validated_and_partial) ... ok
+test_untrusted_fields_and_invalid_input (test_core_contract.Cookies.test_untrusted_fields_and_invalid_input) ... ok
+test_coordinate_without_route (test_core_contract.Decoder.test_coordinate_without_route) ... ok
+test_empty_and_bad_envelope (test_core_contract.Decoder.test_empty_and_bad_envelope) ... ok
+test_eta_midnight_dst_and_meridiem (test_core_contract.Decoder.test_eta_midnight_dst_and_meridiem) ... ok
+test_fallback_and_malformed_nested (test_core_contract.Decoder.test_fallback_and_malformed_nested) ... ok
+test_first_status_object_is_authoritative (test_core_contract.Decoder.test_first_status_object_is_authoritative) ... ok
+test_freshest_courier_dedup_and_invalid_fixes (test_core_contract.Decoder.test_freshest_courier_dedup_and_invalid_fixes) ... ok
+test_protocol_auth (test_core_contract.Decoder.test_protocol_auth) ... ok
+test_visible_status_courier_restaurant (test_core_contract.Decoder.test_visible_status_courier_restaurant) ... ok
+test_failures_and_rotation (test_core_contract.Gateways.test_failures_and_rotation) ... ok
+test_profile_optional_errors_and_auth (test_core_contract.Gateways.test_profile_optional_errors_and_auth) ... ok
+test_request_and_success (test_core_contract.Gateways.test_request_and_success) ... ok
+test_current_point_does_not_invent_timestamps (test_core_contract.Routes.test_current_point_does_not_invent_timestamps) ... ok
+test_gap_retains_position_and_late_samples_merge (test_core_contract.Routes.test_gap_retains_position_and_late_samples_merge) ... ok
+test_interpolation_freeze_and_reset (test_core_contract.Routes.test_interpolation_freeze_and_reset) ... ok
+test_long_gap_holds_then_resumes_contiguous_segment (test_core_contract.Routes.test_long_gap_holds_then_resumes_contiguous_segment) ... ok
+test_data_updates_do_not_reload_options_updates_do (test_ha_framework.FrameworkTests.test_data_updates_do_not_reload_options_updates_do) ... /tmp/simple-uber-eats-v4-venv/lib64/python3.14/site-packages/homeassistant/components/http/server.py:156: DeprecationWarning: Inheritance class HomeAssistantApplication from web.Application is discouraged
+  class HomeAssistantApplication(web.Application):
+Executing <Task finished name='Task-17' coro=<FrameworkTests.test_data_updates_do_not_reload_options_updates_do() done, defined at /tmp/simple-uber-eats-v4-new/tests/test_ha_framework.py:18> result=None created at /usr/lib64/python3.14/asyncio/runners.py:109> took 0.481 seconds
+ok
+test_flow_valid_orders_survive_optional_profile_failure (test_ha_framework.FrameworkTests.test_flow_valid_orders_survive_optional_profile_failure) ... ok
+test_initial_privacy_options_are_false (test_ha_framework.FrameworkTests.test_initial_privacy_options_are_false) ... ok
+test_real_platform_imports (test_ha_framework.FrameworkTests.test_real_platform_imports) ... ok
+test_reauth_and_reconfigure_use_current_entry (test_ha_framework.FrameworkTests.test_reauth_and_reconfigure_use_current_entry) ... ok
+test_missing_credentials_require_reauth (test_ha_runtime.LifecycleTests.test_missing_credentials_require_reauth) ... ok
+test_tracker_unknown_and_cleanup (test_ha_runtime.LifecycleTests.test_tracker_unknown_and_cleanup) ... ok
+test_auth_rejection_distinct_and_rotations_saved_even_on_failure (test_ha_runtime.RuntimeTests.test_auth_rejection_distinct_and_rotations_saved_even_on_failure) ... ok
+test_diagnostics_whitelist (test_ha_runtime.RuntimeTests.test_diagnostics_whitelist) ... ok
+test_minimize_entry_preserves_label_and_zone (test_ha_runtime.RuntimeTests.test_minimize_entry_preserves_label_and_zone) ... ok
+test_polling_tracks_valid_snapshots (test_ha_runtime.RuntimeTests.test_polling_tracks_valid_snapshots) ... ok
+test_privacy_defaults_off (test_ha_runtime.RuntimeTests.test_privacy_defaults_off) ... ok
+test_registry_migration_only_same_entry (test_ha_runtime.RuntimeTests.test_registry_migration_only_same_entry) ... ok
+test_transient_and_throttle_backoff (test_ha_runtime.RuntimeTests.test_transient_and_throttle_backoff) ... ok
+
+----------------------------------------------------------------------
+Ran 36 tests in 0.546s
+
+OK

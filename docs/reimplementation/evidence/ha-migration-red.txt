@@ -1,0 +1,28 @@
+/tmp/simple-uber-eats-v4-venv/lib64/python3.14/site-packages/homeassistant/components/http/server.py:156: DeprecationWarning: Inheritance class HomeAssistantApplication from web.Application is discouraged
+  class HomeAssistantApplication(web.Application):
+Executing <Task finished name='Task-2' coro=<FrameworkTests.test_data_updates_do_not_reload_options_updates_do() done, defined at /tmp/simple-uber-eats-v4-new/tests/test_ha_framework.py:18> result=None created at /usr/lib64/python3.14/asyncio/runners.py:109> took 0.586 seconds
+.......F
+======================================================================
+FAIL: test_upgrade_invalid_credentials_keeps_valid_zone_and_removes_dump (test_ha_framework.FrameworkTests.test_upgrade_invalid_credentials_keeps_valid_zone_and_removes_dump)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/usr/lib64/python3.14/asyncio/runners.py", line 127, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/usr/lib64/python3.14/asyncio/base_events.py", line 719, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "/tmp/simple-uber-eats-v4-new/tests/test_ha_framework.py", line 81, in test_upgrade_invalid_credentials_keeps_valid_zone_and_removes_dump
+    self.assertEqual(updates[0]['data'],{'sid':'','session_id':'','time_zone':'America/Mexico_City','account_name':'Name'})
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'sid[21 chars]'', 'time_zone': 'UTC', 'account_name': 'Name'} != {'sid[21 chars]'', 'time_zone': 'America/Mexico_City', 'account_name': 'Name'}
+- {'account_name': 'Name', 'session_id': '', 'sid': '', 'time_zone': 'UTC'}
++ {'account_name': 'Name',
++  'session_id': '',
++  'sid': '',
++  'time_zone': 'America/Mexico_City'}
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.613s
+
+FAILED (failures=1)

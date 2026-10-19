@@ -1,0 +1,36 @@
+test_auth_input_utf8_byte_limit (test_core_compatibility.BrowserCompatibility.test_auth_input_utf8_byte_limit) ... ok
+test_config_option_is_inert_and_never_read (test_core_compatibility.BrowserCompatibility.test_config_option_is_inert_and_never_read) ... ok
+test_curl_comment_is_not_an_actual_header (test_core_compatibility.BrowserCompatibility.test_curl_comment_is_not_an_actual_header) ... ok
+test_hash_inside_shell_word_is_literal (test_core_compatibility.BrowserCompatibility.test_hash_inside_shell_word_is_literal) ... 
+  test_hash_inside_shell_word_is_literal (test_core_compatibility.BrowserCompatibility.test_hash_inside_shell_word_is_literal) (source="curl https://example.invalid/#fragment -H 'Cookie: sid=a; uev2.id.session=b'") ... ERROR
+  test_hash_inside_shell_word_is_literal (test_core_compatibility.BrowserCompatibility.test_hash_inside_shell_word_is_literal) (source='curl https://example.invalid -H Cookie:\\ sid=has#hash\\;\\ uev2.id.session=b') ... ERROR
+test_opaque_cookie_content_remains_valid (test_core_compatibility.BrowserCompatibility.test_opaque_cookie_content_remains_valid) ... ok
+test_unpaired_surrogate_rejected_with_generic_error (test_core_compatibility.BrowserCompatibility.test_unpaired_surrogate_rejected_with_generic_error) ... ok
+test_dotted_meridiem_and_inherited_range (test_core_compatibility.DeliveryCompatibility.test_dotted_meridiem_and_inherited_range) ... ok
+test_numeric_string_coordinates_and_timestamp_units (test_core_compatibility.DeliveryCompatibility.test_numeric_string_coordinates_and_timestamp_units) ... ok
+test_status_whitespace_normalized_case_and_punctuation_preserved (test_core_compatibility.DeliveryCompatibility.test_status_whitespace_normalized_case_and_punctuation_preserved) ... ok
+
+======================================================================
+ERROR: test_hash_inside_shell_word_is_literal (test_core_compatibility.BrowserCompatibility.test_hash_inside_shell_word_is_literal) (source="curl https://example.invalid/#fragment -H 'Cookie: sid=a; uev2.id.session=b'")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/simple-uber-eats-v4-new/tests/test_core_compatibility.py", line 43, in test_hash_inside_shell_word_is_literal
+    parsed = session.WebSession.parse(source)
+  File "/tmp/simple-uber-eats-v4-new/custom_components/simple_uber_eats/web_session.py", line 199, in parse
+    raise CookieInputError() from None
+replacement_core.web_session.CookieInputError: Provide valid sid and uev2.id.session cookies
+
+======================================================================
+ERROR: test_hash_inside_shell_word_is_literal (test_core_compatibility.BrowserCompatibility.test_hash_inside_shell_word_is_literal) (source='curl https://example.invalid -H Cookie:\\ sid=has#hash\\;\\ uev2.id.session=b')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/simple-uber-eats-v4-new/tests/test_core_compatibility.py", line 43, in test_hash_inside_shell_word_is_literal
+    parsed = session.WebSession.parse(source)
+  File "/tmp/simple-uber-eats-v4-new/custom_components/simple_uber_eats/web_session.py", line 199, in parse
+    raise CookieInputError() from None
+replacement_core.web_session.CookieInputError: Provide valid sid and uev2.id.session cookies
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.028s
+
+FAILED (errors=2)

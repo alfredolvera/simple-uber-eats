@@ -1,0 +1,26 @@
+/tmp/simple-uber-eats-v4-venv/lib64/python3.14/site-packages/homeassistant/components/http/server.py:156: DeprecationWarning: Inheritance class HomeAssistantApplication from web.Application is discouraged
+  class HomeAssistantApplication(web.Application):
+Executing <Task finished name='Task-2' coro=<FrameworkTests.test_data_updates_do_not_reload_options_updates_do() done, defined at /tmp/simple-uber-eats-v4-new/tests/test_ha_framework.py:18> exception=AssertionError('Expected mock to not have been awaited. Awaited 1 times.') created at /usr/lib64/python3.14/asyncio/runners.py:109> took 0.620 seconds
+F..The deprecated alias TrackerEntity was used from simple_uber_eats. It will be removed in HA Core 2027.6. Use homeassistant.components.device_tracker.TrackerEntity instead, please report it to the author of the 'simple_uber_eats' custom integration
+..
+======================================================================
+FAIL: test_data_updates_do_not_reload_options_updates_do (test_ha_framework.FrameworkTests.test_data_updates_do_not_reload_options_updates_do)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/usr/lib64/python3.14/asyncio/runners.py", line 127, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/usr/lib64/python3.14/asyncio/base_events.py", line 719, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "/tmp/simple-uber-eats-v4-new/tests/test_ha_framework.py", line 24, in test_data_updates_do_not_reload_options_updates_do
+    reload.assert_not_awaited()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib64/python3.14/unittest/mock.py", line 2464, in assert_not_awaited
+    raise AssertionError(msg)
+AssertionError: Expected mock to not have been awaited. Awaited 1 times.
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.649s
+
+FAILED (failures=1)

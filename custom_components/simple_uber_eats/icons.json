@@ -2,41 +2,29 @@
   "entity": {
     "binary_sensor": {
       "account_connected": {
-        "default": "mdi:cloud-off-outline",
-        "state": {
-          "on": "mdi:cloud-check"
-        }
+        "default": "mdi:account-check"
       },
       "active_order": {
-        "default": "mdi:food-takeout-box-outline",
-        "state": {
-          "on": "mdi:food-takeout-box"
-        }
+        "default": "mdi:food-takeout-box"
       }
     },
     "sensor": {
-      "order_status": {
-        "default": "mdi:progress-question",
-        "state": {
-          "preparing": "mdi:chef-hat",
-          "arriving": "mdi:map-marker-radius",
-          "delivered": "mdi:check-circle",
-          "unknown": "mdi:progress-question"
-        }
+      "status": {
+        "default": "mdi:truck-delivery"
       },
       "eta": {
-        "default": "mdi:timer-outline"
+        "default": "mdi:clock-outline"
       },
       "restaurant": {
-        "default": "mdi:storefront-outline"
+        "default": "mdi:store"
       },
       "courier": {
-        "default": "mdi:moped"
+        "default": "mdi:account"
       }
     },
     "device_tracker": {
       "courier_tracker": {
-        "default": "mdi:moped"
+        "default": "mdi:bike"
       }
     }
   }

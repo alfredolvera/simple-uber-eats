@@ -1,0 +1,175 @@
+HA implementation author record — 2026-10-19
+
+Boundary and material consulted
+- I am a fresh fork_turns=none agent dispatched by the parent with the task payload.
+  My first filesystem read was exactly SPEC.md and PLAN.md in the replacement dir.
+- All shell calls explicitly used workdir /tmp/simple-uber-eats-v4-new. I did not
+  read the original workspace, git repository/history, predecessor implementation
+  or tests, sibling projects, upstream Uber integration, or prior chats.
+- I read the new SPEC.md and PLAN.md, my own newly authored files/tests/evidence,
+  and filenames of new core artifacts from rg --files. Core APIs came from SPEC.
+- The parent is an exposed specification/review author. Parent/review messages
+  relayed behavioral issues: rotation-driven reload loop, cookie jar isolation,
+  multiline cookie input, timezone preservation, telemetry gap reset. No old
+  source text was received. This is bounded independent authorship, not a claim
+  of organizational clean-room isolation or legal clearance.
+- Framework sources were official Home Assistant/Python interfaces, not an Uber
+  integration. No upstream author was contacted and nothing was published.
+
+Official references opened through web tools
+https://developers.home-assistant.io/docs/integration_fetching_data/
+https://developers.home-assistant.io/docs/config_entries_config_flow_handler/
+https://developers.home-assistant.io/docs/config_entries_options_flow_handler/
+https://developers.home-assistant.io/docs/entity_registry_index/
+https://developers.home-assistant.io/docs/config_entries_config_flow_handler/#reauthentication-and-reconfiguration
+https://raw.githubusercontent.com/home-assistant/core/dev/homeassistant/helpers/update_coordinator.py
+https://raw.githubusercontent.com/home-assistant/core/dev/homeassistant/helpers/selector.py
+https://raw.githubusercontent.com/home-assistant/core/dev/homeassistant/config_entries.py
+
+Local official framework source consulted after parent installed HA 2026.8.0
+/tmp/simple-uber-eats-v4-venv/lib/python3.14/site-packages/homeassistant/config_entries.py
+  async_update_entry, async_update_and_abort, async_update_reload_and_abort,
+  OptionsFlow and reauth/reconfigure helper definitions (rg, sed 3480:3598).
+/tmp/simple-uber-eats-v4-venv/lib/python3.14/site-packages/homeassistant/helpers/entity_registry.py
+  Public migration methods/function locations via rg only.
+/tmp/simple-uber-eats-v4-venv/lib/python3.14/site-packages/homeassistant/helpers/aiohttp_client.py
+  Session factory cleanup/connector behavior (rg and sed 190:346).
+
+Skills consulted
+/var/home/alfredo/.codex/plugins/cache/openai-curated-remote/superpowers/6.4.2/skills/using-superpowers/SKILL.md
+/var/home/alfredo/.codex/plugins/cache/openai-curated-remote/superpowers/6.4.2/skills/test-driven-development/SKILL.md
+/var/home/alfredo/.codex/plugins/cache/openai-curated-remote/superpowers/6.4.2/skills/verification-before-completion/SKILL.md
+
+Command record (shell heredoc bodies are the authored files, preserved alongside)
+- cat SPEC.md PLAN.md (first and only initial project input)
+- cat [the three skill paths above]
+- python -c 'import importlib.util; print(importlib.util.find_spec("homeassistant"))'
+  Initially None: the system Python did not have HA installed.
+- mkdir -p tests evidence custom_components/simple_uber_eats/translations
+- cat heredocs and python heredoc file writes authored tests/test_ha_runtime.py,
+  tests/test_ha_framework.py, the HA modules and JSON resources listed below.
+- python -m unittest discover -s tests -p 'test_ha_*.py' > evidence/ha-red.txt 2>&1
+  Initial run: 7 errors, expected missing runtime module, before implementation.
+- cat evidence/ha-red.txt
+- python -m unittest discover -s tests -p 'test_ha_*.py' > evidence/ha-intermediate-red.txt 2>&1
+- python -m unittest discover -s tests -p 'test_ha_*.py' > evidence/ha-green.txt 2>&1
+  Nine behavior tests passed with explicitly labeled framework doubles.
+- rg --files custom_components tests (new directory only)
+- /tmp/simple-uber-eats-v4-venv/bin/python -c [construct official HA TextSelector]
+- /tmp/simple-uber-eats-v4-venv/bin/python -m unittest discover -s tests -p 'test_ha_framework.py'
+  Red artifacts: ha-framework-red.txt (unconditional reload), ha-migration-red.txt
+  (invalid credentials lost valid timezone), ha-session-red.txt (factory missing).
+  Subsequent runs corrected those real failures; supplementary coverage was added
+  for existing lifecycle behavior. Not every later test had an individual red run.
+- /tmp/simple-uber-eats-v4-venv/bin/python -m unittest discover -s tests -p 'test_ha_*.py'
+  Green artifacts: ha-framework-green.txt, ha-session-green.txt, ha-final-tests.txt.
+- /tmp/simple-uber-eats-v4-venv/bin/ruff check [all owned HA Python/tests] --fix
+- /tmp/simple-uber-eats-v4-venv/bin/ruff format [all owned HA Python/tests]
+- rg official framework methods and sed official source ranges described above.
+- tail -45 tests/test_ha_framework.py
+- /tmp/simple-uber-eats-v4-venv/bin/python -m unittest discover -s tests > evidence/ha-whole-suite.txt 2>&1
+- Final compileall, unittest, ruff and JSON-load checks recorded in ha-verification.txt.
+All exec calls used the same explicit isolated workdir; no Git commands were run.
+
+Owned deliverables
+custom_components/simple_uber_eats/{__init__,account,binary_sensor,config_flow,
+const,device_tracker,diagnostics,http,runtime,sensor,settings}.py
+custom_components/simple_uber_eats/{strings,icons}.json
+custom_components/simple_uber_eats/translations/en.json
+tests/test_ha_runtime.py; tests/test_ha_framework.py; evidence/ha-*.
+I changed SPEC HTTP session wording with explicit parent authorization after the
+independent reviewer reproduced a cross-account leak through a shared cookie jar.
+The new helper shares HA's connector, has DummyCookieJar, and detaches its session.
+
+Validation scope and limitations
+- Framework doubles are scoped with patch.dict(sys.modules) per test and restored.
+- Real HA 2026.8.0 imports, flows, native selectors, lifecycle calls and session
+  helper are checked using stdlib unittest; no live HTTP or orders were used.
+- Session test substitutes a real local aiohttp connector at the HA connector
+  factory boundary to avoid requiring loaded networking/zeroconf services. It
+  verifies no stored cookies and that detach leaves the shared connector open.
+- Tests are not a full booted HA integration/config-entry deployment. No live
+  order, real courier motion, dashboard migration, or hardware validation claim.
+- The actual Home Assistant framework emits a DeprecationWarning about its own
+  HomeAssistantApplication inheritance from aiohttp Application. The async debug
+  runner also reports the first import taking >0.1s; neither is a test failure.
+- HA 2026.8 async_update_reload_and_abort currently permits an entry update
+  listener but warns on the renewal path that this arrangement changes in 2026.12.
+  Current code uses exactly one explicit reload for reauth/reconfigure, and its
+  listener reloads on options changes only, avoiding credential rotation loops.
+- Hassfest/HACS packaging are parent-owned checks; no HACS approval is claimed.
+
+Later parent-directed compatibility expansion (before author freeze)
+- Parent relayed additional public interface behaviors without predecessor code:
+  None idle sensor state, placeholder normalization, active_orders_count attrs,
+  picture_url privacy opt-in, ETA arrival_time, order_id/description, connection
+  timestamps/state, account device suffix, tracker state/metadata, explicit legacy
+  account import/adoption, shared-label union, and HTTP auth three-strike policy.
+- I read new core model.py and motion.py to use their newly authored interfaces.
+  No predecessor files or tests were read.
+- Added regression artifacts ha-compat-red.txt, ha-auth-red.txt,
+  ha-legacy-red.txt, ha-tracker-mode-red.txt, then passed scoped tests. Additional
+  registry/label and lifecycle tests provide supplemental coverage after code.
+- Public official HA device_registry.py, label_registry.py, entity.py were
+  inspected with rg/sed for current registry APIs and loaded-entity checks.
+  Device registry 2026.8 has one owning entry: add_config_entry_id is deprecated
+  and does nothing by itself, so explicit safe adoption uses new_config_entry_id
+  plus merge_identifiers; entity IDs remain stable via async_update_entity_platform.
+- New compatibility.py performs whole-source preflight (unloaded entry, unloaded
+  entities, supported roles, no unique-ID conflict, at most one owned device)
+  before adoption. A loaded/conflicting source keeps its original registry and
+  configuration entry; the new entry gets separate IDs. Only explicit selection
+  records legacy_entry_id. The original config entry is never deleted.
+- Labels union existing labels on owned entities; no arbitrary registry deletion.
+- Description attribute uses the normalized visible status because the typed
+  specification has one visible wording field, as authorized by the parent.
+- Three consecutive HTTP401/403 polls trigger reauth; explicit protocol auth
+  rejection remains immediate. Success and non-auth temporary failures reset
+  the HTTP reject counter. Flow credential validation remains immediate.
+- Parent requested avoiding a full-suite rerun temporarily while parent-authored
+  real-registry test teardown was being repaired. Scoped author verification
+  continues; parent owns final combined-suite verification after this freeze.
+- Final compatibility addition: explicit legacy import can recover missing
+  sid/session_id from source full_cookie or cookie using strict WebSession.parse;
+  only validated two-cookie data is persisted and the source is unchanged.
+  Regression observed red in ha-legacy-dump-red.txt and green in final tests.
+- Final scoped result after compatibility expansion: 27 HA author tests pass.
+  Compileall, owned-file Ruff, JSON checks and combined suite are recorded below.
+- Independent reviewer found setup-retry HTTP grace counts reset when a fresh
+  coordinator was constructed after ConfigEntryNotReady. Added per-entry integer
+  counters in hass.data[DOMAIN]['http_auth_failures'], never credentials/payloads.
+  Recreated coordinators retain the count; success/non-auth failures clear it;
+  entry removal clears only that entry. Regression recorded red/green in
+  ha-startup-auth-red.txt and ha-startup-auth-green.txt.
+- A combined-suite attempt at 06:16 UTC printed 63 dots then timed out at 30s,
+  without an OK footer. Preserved as ha-combined-timeout.txt; parent/reviewer
+  were notified. This is not a passing-suite claim. Author scoped tests exit
+  normally; parent owns investigation of the combined framework fixture hang.
+Final author verification after startup-counter correction: 30 scoped HA tests
+passed and process exited 0; owned-file Ruff passed, all Python compiled, three
+owned JSON resources parsed. Exact output is evidence/ha-verification.txt.
+Author output is now frozen for parent hashing/review; later changes require a
+new recorded correction round. No live orders/deployment/publication performed.
+
+Parent-requested correction round after initial author freeze, 06:18–06:20 UTC
+- Consulted newly authored independent reviewer test
+  tests/test_review_adoption_real.py at explicit parent request, plus official
+  HA entity_registry.py lines1680–1740 (async_device_modified). No predecessor
+  source or predecessor tests were read.
+- Reproduced real registry failure: moving a device first synchronously removes
+  its old-owner entities, causing later platform migration KeyError. Evidence:
+  ha-adoption-real-red.txt. Corrected order after unchanged whole-set preflight:
+  migrate/detach entities with new_device_id=None, move device via public API,
+  reattach existing device IDs. Labels/entity IDs remain on registry entries.
+- The corrected actual-registry test reached its passing dot with no traceback,
+  but both bounded 15s commands had runner-teardown linger before an OK footer.
+  ha-adoption-real-green.txt alone is therefore not claimed as an exited test
+  suite. Reviewer owns that fixture and is repairing its teardown.
+- Reviewer additionally requested grace-counter reset after successful renewal
+  validation outside the coordinator. New own flow test failed before this fix
+  (ha-flow-auth-reset-red.txt); successful reauth/reconfigure now clears only
+  that entry's integer counter after validated orders, before entry update.
+- Scoped HA suite now has 31 passing tests and exits0, with official framework
+  warning/import timing note as previously recorded. Exact fresh checks follow
+  in ha-verification-correction.txt. No alternative renewal API change was made:
+  correctness target remains HA2026.8; future2026.12 warning is documented.

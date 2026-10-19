@@ -1,117 +1,100 @@
-"""The Uber Eats integration."""
-from __future__ import annotations
+"""Lifecycle for the independently authored Simple Uber Eats integration."""
 
 from homeassistant.const import Platform
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers import label_registry as lr
+from homeassistant.exceptions import ConfigEntryAuthFailed
 
-from .coordinator import UberEatsCoordinator
-from .const import (
-    CONF_ACCOUNT_NAME,
-    CONF_FULL_COOKIE,
-    CONF_SESSION_ID,
-    CONF_SID,
-    CONF_TIME_ZONE,
-    DOMAIN,
-    LEGACY_DOMAIN,
-)
-from .migration import RETIRED_ENTITY_UNIQUE_ID_KEYS, migrate_legacy_registry
-from .protocol import SessionCredentials, rotated_entry_data
+from .account import migrate_registry
+from .compatibility import adopt_selected_legacy
+from .http import create_session
+from .model import AuthRejected, ServiceUnavailable
+from .runtime import UberCoordinator
+from .settings import clean_entry_data, valid_timezone
+from .web_session import CookieInputError, WebSession
+from .wire import Gateway
 
-PLATFORMS = (Platform.SENSOR, Platform.BINARY_SENSOR, Platform.DEVICE_TRACKER)
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.DEVICE_TRACKER]
 
 
-def _async_prepare_entity_registry(
-    hass: HomeAssistant, entry: ConfigEntry, account_name: str
-) -> str:
-    """Create the shared label and remove only known retired entry entities."""
-    label_registry = lr.async_get(hass)
-    label = label_registry.async_get_label_by_name("Uber Eats")
-    if label is None:
-        label = label_registry.async_create(
-            name="Uber Eats",
-            color="black",
-            icon="mdi:food-takeout-box",
-        )
-
-    account_key = account_name.replace(" ", "_")
-    retired_unique_ids = {
-        f"{LEGACY_DOMAIN}_{account_key}_{key}"
-        for key in RETIRED_ENTITY_UNIQUE_ID_KEYS
-    }
-    entity_registry = er.async_get(hass)
-    for entity_entry in er.async_entries_for_config_entry(
-        entity_registry, entry.entry_id
-    ):
-        if (
-            entity_entry.platform == DOMAIN
-            and entity_entry.unique_id in retired_unique_ids
-        ):
-            entity_registry.async_remove(entity_entry.entity_id)
-
-    return label.label_id
-
-
-def _async_apply_label_to_entry_entities(
-    hass: HomeAssistant, entry: ConfigEntry, label_id: str
-) -> None:
-    """Union the integration label into every entity for this config entry."""
-    entity_registry = er.async_get(hass)
-    for entity_entry in er.async_entries_for_config_entry(
-        entity_registry, entry.entry_id
-    ):
-        if entity_entry.platform != DOMAIN or label_id in entity_entry.labels:
-            continue
-        entity_registry.async_update_entity(
-            entity_entry.entity_id,
-            labels={*entity_entry.labels, label_id},
-        )
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Create the account coordinator and its native entity platforms."""
-    credentials = SessionCredentials.from_stored(
-        entry.data[CONF_SID],
-        entry.data[CONF_SESSION_ID],
-        entry.data.get(CONF_FULL_COOKIE),
-    )
-    normalized_entry_data = rotated_entry_data(entry.data, credentials)
-    if normalized_entry_data != dict(entry.data):
-        hass.config_entries.async_update_entry(entry, data=normalized_entry_data)
-
-    coordinator = UberEatsCoordinator(
-        hass=hass,
-        entry_id=entry.entry_id,
-        sid=credentials.sid,
-        session_id=credentials.session_id,
-        account_name=entry.data[CONF_ACCOUNT_NAME],
-        time_zone=entry.data[CONF_TIME_ZONE],
-        full_cookie=credentials.header(),
-    )
+async def async_setup_entry(hass, entry):
+    """Validate active orders first; optional profile cannot block setup."""
     try:
+        data = clean_entry_data(entry.data, hass.config.time_zone)
+        credentials = WebSession(data["sid"], data["session_id"])
+    except (CookieInputError, ValueError, TypeError):
+        raise ConfigEntryAuthFailed("Session credentials must be renewed") from None
+    if data != entry.data:
+        hass.config_entries.async_update_entry(entry, data=data)
+    session = create_session(hass)
+    entry.async_on_unload(session.detach)
+    try:
+        gateway = Gateway(session, credentials, data["time_zone"])
+        coordinator = UberCoordinator(hass, entry, gateway)
         await coordinator.async_config_entry_first_refresh()
-    except ConfigEntryAuthFailed:
+        if not data.get("account_name"):
+            try:
+                name = await gateway.account_label()
+            except (AuthRejected, ServiceUnavailable, TimeoutError):
+                name = None
+            finally:
+                coordinator.persist_credentials()
+            if name:
+                hass.config_entries.async_update_entry(
+                    entry, data={**entry.data, "account_name": name}
+                )
+        entry.runtime_data = coordinator
+        adopt_selected_legacy(hass, entry)
+        migrate_registry(hass, entry)
+        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+        entry.async_on_unload(entry.add_update_listener(_async_options_updated))
+    except BaseException:
+        session.detach()
         raise
-    except Exception as err:
-        raise ConfigEntryNotReady("Initial Uber Eats refresh failed") from err
-
-    migrate_legacy_registry(hass, entry)
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
-    label_id = _async_prepare_entity_registry(
-        hass, entry, entry.data[CONF_ACCOUNT_NAME]
-    )
-    coordinator.label_id = label_id
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    _async_apply_label_to_entry_entities(hass, entry, label_id)
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload native platforms before discarding the account coordinator."""
+async def _async_options_updated(hass, entry):
+    """Replace entities so removed private attributes leave current state."""
+    options = dict(entry.options)
+    if options != entry.runtime_data.options_snapshot:
+        entry.runtime_data.options_snapshot = options
+        await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def async_unload_entry(hass, entry):
     unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unloaded:
-        hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
+        await entry.runtime_data.async_shutdown()
     return unloaded
+
+
+async def async_migrate_entry(hass, entry):
+    """Only migrate our own version-one entries; never adopt another domain."""
+    if entry.domain != "simple_uber_eats" or entry.version > 2:
+        return False
+    if entry.version == 1:
+        try:
+            data = clean_entry_data(entry.data, hass.config.time_zone)
+        except (CookieInputError, ValueError, TypeError):
+            # Setup raises ConfigEntryAuthFailed and starts a credential flow.
+            data = {
+                "sid": "",
+                "session_id": "",
+                "time_zone": valid_timezone(
+                    entry.data.get("time_zone"), hass.config.time_zone
+                ),
+            }
+            name = entry.data.get("account_name")
+            if isinstance(name, str) and name.strip():
+                data["account_name"] = name.strip()
+        migrate_registry(hass, entry)
+        hass.config_entries.async_update_entry(
+            entry, data=data, version=2, minor_version=1
+        )
+    return True
+
+
+async def async_remove_entry(hass, entry):
+    """Forget non-secret retry state after an entry is removed."""
+    hass.data.get("simple_uber_eats", {}).get("http_auth_failures", {}).pop(
+        entry.entry_id, None
+    )

@@ -1,0 +1,66 @@
+Independent replacement-only review, 2026-10-19.
+Read SPEC.md, PLAN.md, replacement runtime modules and replacement tests only.
+No predecessor source/history, upstream integrations, network requests or live HA.
+Inspected installed official aiohttp client.py/client_reqrep.py and Home Assistant
+2026.8.0 helpers/aiohttp_client.py, helpers/update_coordinator.py,
+helpers/entity_registry.py and config_entries.py.
+Commands (cwd /tmp/simple-uber-eats-v4-new):
+- /tmp/simple-uber-eats-v4-venv/bin/python -m pytest -q tests
+  Result before independent tests: 35 passed, 10 subtests passed, one framework warning.
+- /tmp/simple-uber-eats-v4-venv/bin/python -m ruff check custom_components tests
+  Result: 21 findings (primarily import order, unused imports; reported to parent).
+- /tmp/simple-uber-eats-v4-venv/bin/python -m pytest -q tests/test_review_independent.py
+  Result: 1 passed (DST fall-back ETA selects future fold), 1 failed.
+P1: Normal shared HA ClientSession CookieJar overrides explicit account Cookie
+header with server-learned sid/session cookies. Real aiohttp request construction
+captures account_A instead of requested account_B and retains unrelated cookie.
+No socket connection: custom ClientRequest captures headers and raises a sentinel.
+This breaks entry isolation and two-cookie minimization. Reported to parent,
+HA author and core author. HA-owned DummyCookieJar client with shared connector
+and explicit lifecycle is suggested; do not mutate HA shared cookie jar.
+Follow-up: HA author added http.create_session using HA async_create_clientsession
+with DummyCookieJar, connector_owner=False and explicit detach lifecycle. Adapted
+independent regression to exercise actual factory and actual HA helper (substitute
+connector bootstrap/request class only); final headers now contain account_B,
+session_B and exactly two cookies. Detach leaves shared connector open.
+Independent focused tests: 2 passed. Full suite after authors' changes: 42 passed,
+10 subtests passed. Current ruff only identified three fixable test import findings;
+reviewer's import issue fixed locally, two HA author findings reported.
+Additional direct real registry bootstrap experiment did not reach migration:
+HomeAssistant entity registry requires a loaded device registry. No claim of live
+registry migration or live account validation is made from that experiment.
+
+Final scoped re-review after compatibility additions, 2026-10-19:
+Read only replacement implementation/tests/SPEC and installed official HA2026.8
+entity_registry.py/device_registry.py. No original implementation exposure.
+P1 startup-auth grace: 3 recreated coordinators/real first_refresh after HTTP401
+all raised ConfigEntryNotReady, never auth failure. New independent regression
+`tests/test_review_setup_auth.py` failed ['retry','retry','retry'] vs expected
+['retry','retry','reauth']. HA author retained counts per entry in hass.data;
+same regression subsequently passed and process exited0.
+P1 legacy adoption with device: new `tests/test_review_adoption_real.py` creates
+real HA DR/ER source device and sensor, unloads legacy entry, invokes opt-in
+adoption. Moving device first synchronously triggers HA ER.async_device_modified
+which removes old-owned attached entities (official ER lines1714-1727).
+Following platform migration raises KeyError('sensor.preserved_eta'); entity ID
+and dashboard continuity are lost. Reported to parent and HA author for correction.
+Current failing real-device test teardown can leave unittest asyncio.Runner.close
+waiting; bounded timeout used while investigating. Explicit traceback established
+production migration failure before teardown; no deployment or live-account claim.
+Corrections verified: HA author now detaches entity devices during platform move,
+then moves source device ownership, then reattaches the original device IDs.
+Independent real-device adoption assertions pass, preserving entity_id, unique_id,
+platform/config owner, device identity and labels. Startup retry test passes after
+per-entry HTTP grace persistence; successful credential flow also clears its count.
+No remaining actionable production findings from the scoped final source review.
+Final `python -m ruff check custom_components tests`: all checks passed.
+Unittest's per-case Runner.close intermittently waited in Python3.14
+shutdown_default_executor (line73), with no remaining async generators. Root traced
+filesystem executor/config-entry store fixture work; tests now mark config-entry
+stores load_empty to avoid writable-store executor work in isolated registries.
+No runtime modifications were made by reviewer. New independent tests are
+review_setup_auth.py and review_adoption_real.py (with test_ prefix).
+Final fixture completion: after set_load_empty, awaited ConfigEntries store
+async_load so read-only mode is actually active. Plain full command
+`timeout -k 2 20 /tmp/simple-uber-eats-v4-venv/bin/python -u -m unittest discover -s tests -q`
+now completed: Ran72tests in0.145s, OK, exit0, without diagnostic timers.

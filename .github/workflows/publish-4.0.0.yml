@@ -1,0 +1,48 @@
+# Single-version publication authorized for 4.0.0; no wildcard tag automation.
+# Uses the GitHub runner's gh client directly, without external action code.
+name: Publish 4.0.0
+
+on:
+  push:
+    tags:
+      - '4.0.0'
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Wait for validations of this exact commit
+        run: |
+          for attempt in $(seq 1 60); do
+            gh run list --repo "$GH_REPO" --commit "$GITHUB_SHA" --limit 30 --json name,status,conclusion,event > runs.json
+            state="$(python3 - <<'PY'
+          import json
+          required = {'HACS validation', 'Hassfest', 'Integration tests'}
+          runs = [r for r in json.load(open('runs.json')) if r['name'] in required and r['event'] == 'push']
+          if any(r['status'] == 'completed' and r['conclusion'] != 'success' for r in runs):
+              print('failed')
+          elif required <= {r['name'] for r in runs if r['status'] == 'completed' and r['conclusion'] == 'success'}:
+              print('passed')
+          else:
+              print('waiting')
+          PY
+          )"
+            if [ "$state" = passed ]; then exit 0; fi
+            if [ "$state" = failed ]; then echo 'Validation failed; release was not published.'; exit 1; fi
+            sleep 10
+          done
+          echo 'Validation timeout; release was not published.'
+          exit 1
+      - name: Publish only 4.0.0
+        run: |
+          gh api "repos/$GH_REPO/contents/RELEASE_NOTES.md?ref=$GITHUB_SHA" --jq .content | base64 --decode > release-notes.md
+          gh release create 4.0.0 --repo "$GH_REPO" --verify-tag --title 'Simple Uber Eats 4.0.0' --notes-file release-notes.md

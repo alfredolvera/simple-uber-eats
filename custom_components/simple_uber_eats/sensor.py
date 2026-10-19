@@ -1,150 +1,54 @@
-"""Native sensors for the primary active Uber Eats order."""
-from __future__ import annotations
-
-from datetime import datetime
-from typing import Any
+"""Native order sensors; ETA is an aware timestamp supplied by the decoder."""
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import CONF_ACCOUNT_NAME, DOMAIN
-from .entity import UberEatsCoordinatorEntity
-from .presentation import order_count_attributes, primary_order, restaurant_attributes
+from .account import AccountEntity
+from .const import PHONE_OPTION, PHOTO_OPTION
+
+PARALLEL_UPDATES = 0
 
 
-def _primary_order(coordinator) -> dict[str, Any] | None:
-    """Return the deterministic primary active order."""
-    return primary_order(coordinator.data)
-
-
-def _active_orders_attribute(coordinator) -> dict[str, int]:
-    """Return a compact multi-order diagnostic attribute."""
-    return order_count_attributes(coordinator.data)
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up the native Uber Eats sensors."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
-    account_name = config_entry.data[CONF_ACCOUNT_NAME]
+async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(
-        [
-            UberEatsOrderStatus(coordinator, account_name, config_entry.entry_id),
-            UberEatsETA(coordinator, account_name, config_entry.entry_id),
-            UberEatsRestaurant(coordinator, account_name, config_entry.entry_id),
-            UberEatsCourier(coordinator, account_name, config_entry.entry_id),
-        ]
+        UberSensor(entry.runtime_data, entry, role)
+        for role in ("status", "eta", "restaurant", "courier")
     )
 
 
-class UberEatsSensorEntity(UberEatsCoordinatorEntity, SensorEntity):
-    """Base class for Uber Eats sensors."""
-
-
-class UberEatsOrderStatus(UberEatsSensorEntity):
-    """Uber's visible status for the primary active order."""
-
-    _attr_translation_key = "order_status"
-
-    def __init__(self, coordinator, account_name: str, entry_id: str) -> None:
-        super().__init__(coordinator, account_name, entry_id, "order_status")
+class UberSensor(AccountEntity, SensorEntity):
+    def __init__(self, coordinator, entry, role):
+        super().__init__(coordinator, entry, role)
+        if role == "eta":
+            self._attr_device_class = SensorDeviceClass.TIMESTAMP
 
     @property
-    def native_value(self) -> str | None:
-        order = _primary_order(self.coordinator)
-        return order.get("order_status") if order else None
+    def native_value(self):
+        delivery = self.delivery
+        if delivery is None:
+            return None
+        if self.role == "courier":
+            return self.courier_name
+        return getattr(delivery, self.role)
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        order = _primary_order(self.coordinator)
-        attrs: dict[str, Any] = _active_orders_attribute(self.coordinator)
-        if order:
-            attrs.update(
-                {
-                    "description": order.get("order_status_description"),
-                    "order_id": order.get("order_id"),
-                }
+    def extra_state_attributes(self):
+        data = self.coordinator.data
+        result = {"active_orders_count": len(data.deliveries) if data else 0}
+        delivery = self.delivery
+        if delivery is None:
+            return result
+        if self.role == "status":
+            result.update(order_id=delivery.reference, description=delivery.status)
+        elif self.role == "eta":
+            result["arrival_time"] = delivery.eta
+        elif self.role == "restaurant" and delivery.restaurant_point:
+            result.update(
+                latitude=delivery.restaurant_point.latitude,
+                longitude=delivery.restaurant_point.longitude,
             )
-        return {key: value for key, value in attrs.items() if value is not None}
-
-
-class UberEatsETA(UberEatsSensorEntity):
-    """Expose the primary order's authoritative arrival timestamp."""
-
-    _attr_translation_key = "eta"
-    _attr_device_class = SensorDeviceClass.TIMESTAMP
-
-    def __init__(self, coordinator, account_name: str, entry_id: str) -> None:
-        super().__init__(coordinator, account_name, entry_id, "driver_eta")
-
-    @property
-    def native_value(self) -> datetime | None:
-        order = _primary_order(self.coordinator)
-        arrival = order.get("driver_eta") if order else None
-        if not isinstance(arrival, datetime) or arrival.tzinfo is None:
-            return None
-        return arrival
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        attrs: dict[str, Any] = _active_orders_attribute(self.coordinator)
-        if (arrival := self.native_value) is not None:
-            attrs["arrival_time"] = arrival
-        return attrs
-
-
-class UberEatsRestaurant(UberEatsSensorEntity):
-    """Restaurant for the primary active order."""
-
-    _attr_translation_key = "restaurant"
-
-    def __init__(self, coordinator, account_name: str, entry_id: str) -> None:
-        # Preserve the existing Restaurant Name entity registry entry.
-        super().__init__(coordinator, account_name, entry_id, "restaurant_name")
-
-    @property
-    def native_value(self) -> str | None:
-        order = _primary_order(self.coordinator)
-        return order.get("restaurant_name") if order else None
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        return restaurant_attributes(self.coordinator.data)
-
-
-class UberEatsCourier(UberEatsSensorEntity):
-    """Assigned courier for the primary active order."""
-
-    _attr_translation_key = "courier"
-
-    def __init__(self, coordinator, account_name: str, entry_id: str) -> None:
-        # Preserve the existing Driver Name entity registry entry.
-        super().__init__(coordinator, account_name, entry_id, "driver_name")
-
-    @property
-    def native_value(self) -> str | None:
-        order = _primary_order(self.coordinator)
-        if not order:
-            return None
-        driver_name = order.get("driver_name")
-        if driver_name in (None, "", "Unknown", "No Driver Assigned"):
-            return None
-        return driver_name
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        order = _primary_order(self.coordinator)
-        attrs: dict[str, Any] = _active_orders_attribute(self.coordinator)
-        if order:
-            attrs.update(
-                {
-                    "picture_url": order.get("driver_picture_url"),
-                    "phone": order.get("driver_phone_formatted"),
-                }
-            )
-        return {key: value for key, value in attrs.items() if value not in (None, "")}
+        elif self.role == "courier":
+            if self.entry.options.get(PHONE_OPTION, False) and delivery.courier_phone:
+                result["phone"] = delivery.courier_phone
+            if self.entry.options.get(PHOTO_OPTION, False) and delivery.courier_photo:
+                result["picture_url"] = delivery.courier_photo
+        return result

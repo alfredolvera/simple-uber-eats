@@ -1,5 +1,17 @@
 # Changelog
 
+## [4.0.0] - 2026-10-19
+
+### Changed
+
+- Replaced the runtime and behavioral tests using separate implementation contexts and a recorded functional specification; documented source-access boundaries and review corrections.
+- Corrected the earlier provenance statement rather than presenting the historical 3.x process as isolated from predecessor source.
+- Uses typed delivery snapshots and entry-scoped entity identifiers, with explicit registry migration preserving existing entity IDs, names and labels.
+- Retains native entities, stable ETA timestamps, local buffered courier tracking, adaptive polling, authentication recovery, session rotation and explicit legacy-account import.
+- Keeps courier phone and picture attributes behind independent options, disabled by default.
+- Isolates account cookie storage while reusing Home Assistant's connection pool.
+- Adds tests against Home Assistant 2026.8 APIs, including cross-account cookie isolation, startup authentication retry persistence and registry migration.
+
 ## [3.1.2] - 2026-10-02
 
 ### Fixed
@@ -48,8 +60,8 @@
 
 ### Highlights
 
-- Independently reimplemented the current integration around observable Uber behavior, documented Home Assistant/Python interfaces, tests, and live validation.
-- Licensed the clean 3.x release tree under the MIT License.
+- Reworked the integration around observable Uber behavior, Home Assistant/Python interfaces, tests, and live validation. The original assertion of independent provenance was challenged in HACS review; see the corrected provenance record.
+- Introduced an MIT license file. This historical event does not resolve the source-provenance question concerning 3.x.
 - Changed the Home Assistant integration domain from `uber_eats` to `simple_uber_eats`, giving Simple Uber Eats its own specific namespace.
 - Added an explicit legacy-import flow that validates and copies known 2.x account fields without displaying credentials or deleting the old entry.
 - Uses Home Assistant 2026.8 public entity/device registry migration APIs when legacy entities are unloaded; otherwise it safely creates new-domain registry entries.

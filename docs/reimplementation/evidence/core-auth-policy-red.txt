@@ -1,0 +1,65 @@
+test_http_auth_status_distinguished_from_protocol_rejection (test_core_compatibility.AuthenticationCompatibility.test_http_auth_status_distinguished_from_protocol_rejection) ... ERROR
+test_auth_input_utf8_byte_limit (test_core_compatibility.BrowserCompatibility.test_auth_input_utf8_byte_limit) ... ok
+test_browser_only_cookie_shape_and_whitespace (test_core_compatibility.BrowserCompatibility.test_browser_only_cookie_shape_and_whitespace) ... 
+  test_browser_only_cookie_shape_and_whitespace (test_core_compatibility.BrowserCompatibility.test_browser_only_cookie_shape_and_whitespace) (source='sid=bad; uev2.id.session=valid-session') ... FAIL
+  test_browser_only_cookie_shape_and_whitespace (test_core_compatibility.BrowserCompatibility.test_browser_only_cookie_shape_and_whitespace) (source='sid=QA.valid; uev2.id.session=invalid') ... FAIL
+test_browser_only_cookie_shape_and_whitespace (test_core_compatibility.BrowserCompatibility.test_browser_only_cookie_shape_and_whitespace) ... FAIL
+test_config_option_is_inert_and_never_read (test_core_compatibility.BrowserCompatibility.test_config_option_is_inert_and_never_read) ... ok
+test_curl_comment_is_not_an_actual_header (test_core_compatibility.BrowserCompatibility.test_curl_comment_is_not_an_actual_header) ... ok
+test_hash_inside_shell_word_is_literal (test_core_compatibility.BrowserCompatibility.test_hash_inside_shell_word_is_literal) ... ok
+test_opaque_cookie_content_remains_valid (test_core_compatibility.BrowserCompatibility.test_opaque_cookie_content_remains_valid) ... ok
+test_unpaired_surrogate_rejected_with_generic_error (test_core_compatibility.BrowserCompatibility.test_unpaired_surrogate_rejected_with_generic_error) ... ok
+test_dotted_meridiem_and_inherited_range (test_core_compatibility.DeliveryCompatibility.test_dotted_meridiem_and_inherited_range) ... ok
+test_numeric_string_coordinates_and_timestamp_units (test_core_compatibility.DeliveryCompatibility.test_numeric_string_coordinates_and_timestamp_units) ... ok
+test_status_whitespace_normalized_case_and_punctuation_preserved (test_core_compatibility.DeliveryCompatibility.test_status_whitespace_normalized_case_and_punctuation_preserved) ... ok
+
+======================================================================
+ERROR: test_http_auth_status_distinguished_from_protocol_rejection (test_core_compatibility.AuthenticationCompatibility.test_http_auth_status_distinguished_from_protocol_rejection)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/usr/lib64/python3.14/asyncio/runners.py", line 127, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/usr/lib64/python3.14/asyncio/base_events.py", line 719, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "/tmp/simple-uber-eats-v4-new/tests/test_core_compatibility.py", line 180, in test_http_auth_status_distinguished_from_protocol_rejection
+    self.assertIsNone(model.AuthRejected().http_status)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'AuthRejected' object has no attribute 'http_status'
+
+======================================================================
+FAIL: test_browser_only_cookie_shape_and_whitespace (test_core_compatibility.BrowserCompatibility.test_browser_only_cookie_shape_and_whitespace) (source='sid=bad; uev2.id.session=valid-session')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/simple-uber-eats-v4-new/tests/test_core_compatibility.py", line 14, in test_browser_only_cookie_shape_and_whitespace
+    with self.subTest(source=source), self.assertRaises(session.CookieInputError):
+                                      ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: CookieInputError not raised
+
+======================================================================
+FAIL: test_browser_only_cookie_shape_and_whitespace (test_core_compatibility.BrowserCompatibility.test_browser_only_cookie_shape_and_whitespace) (source='sid=QA.valid; uev2.id.session=invalid')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/simple-uber-eats-v4-new/tests/test_core_compatibility.py", line 14, in test_browser_only_cookie_shape_and_whitespace
+    with self.subTest(source=source), self.assertRaises(session.CookieInputError):
+                                      ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: CookieInputError not raised
+
+======================================================================
+FAIL: test_browser_only_cookie_shape_and_whitespace (test_core_compatibility.BrowserCompatibility.test_browser_only_cookie_shape_and_whitespace)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/simple-uber-eats-v4-new/tests/test_core_compatibility.py", line 17, in test_browser_only_cookie_shape_and_whitespace
+    self.assertEqual(parsed.as_entry_data(), {'sid': 'QA.valid', 'session_id': 'valid-session'})
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'sid': '  QA.valid', 'session_id': '  valid-session'} != {'sid': 'QA.valid', 'session_id': 'valid-session'}
+- {'session_id': '  valid-session', 'sid': '  QA.valid'}
+?                 --                        --
+
++ {'session_id': 'valid-session', 'sid': 'QA.valid'}
+
+----------------------------------------------------------------------
+Ran 11 tests in 0.030s
+
+FAILED (failures=3, errors=1)

@@ -1,0 +1,20 @@
+.....F.....
+======================================================================
+FAIL: test_http_grace_counter_survives_recreated_coordinators (test_ha_runtime.RuntimeTests.test_http_grace_counter_survives_recreated_coordinators)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/usr/lib64/python3.14/asyncio/runners.py", line 127, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/usr/lib64/python3.14/asyncio/base_events.py", line 719, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "/tmp/simple-uber-eats-v4-new/tests/test_ha_runtime.py", line 244, in test_http_grace_counter_survives_recreated_coordinators
+    self.assertTrue(coordinator.auth_rejected)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true
+
+----------------------------------------------------------------------
+Ran 11 tests in 0.082s
+
+FAILED (failures=1)

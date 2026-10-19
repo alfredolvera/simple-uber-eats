@@ -1,0 +1,24 @@
+/tmp/simple-uber-eats-v4-venv/lib64/python3.14/site-packages/homeassistant/components/http/server.py:156: DeprecationWarning: Inheritance class HomeAssistantApplication from web.Application is discouraged
+  class HomeAssistantApplication(web.Application):
+Traceback (most recent call last):
+  File "/tmp/simple-uber-eats-v4-new/tests/test_review_adoption_real.py", line 37, in test_explicit_unloaded_adoption_keeps_device_entity_and_labels
+    self.assertTrue(compat.adopt_selected_legacy(fixture.hass,fixture.entry))
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/simple-uber-eats-v4-new/custom_components/simple_uber_eats/compatibility.py", line 73, in adopt_selected_legacy
+    registry.async_update_entity_platform(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        entity.entity_id,
+        ^^^^^^^^^^^^^^^^^
+    ...<2 lines>...
+        new_unique_id=new_id,
+        ^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/tmp/simple-uber-eats-v4-venv/lib64/python3.14/site-packages/homeassistant/helpers/entity_registry.py", line 2091, in async_update_entity_platform
+    old = self.entities[entity_id]
+          ~~~~~~~~~~~~~^^^^^^^^^^^
+  File "/usr/lib64/python3.14/collections/__init__.py", line 1148, in __getitem__
+    raise KeyError(key)
+KeyError: 'sensor.preserved_eta'
+Executing <Task pending name='Task-2' coro=<AdoptionChecks.test_explicit_unloaded_adoption_keeps_device_entity_and_labels() running at /tmp/simple-uber-eats-v4-new/tests/test_review_adoption_real.py:52> cb=[_run_until_complete_cb() at /usr/lib64/python3.14/asyncio/base_events.py:181] created at /usr/lib64/python3.14/asyncio/runners.py:109> took 0.391 seconds
+E

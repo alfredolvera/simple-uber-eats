@@ -1,0 +1,262 @@
+test_auth_input_utf8_byte_limit (test_core_compatibility.BrowserCompatibility.test_auth_input_utf8_byte_limit) ... 
+  test_auth_input_utf8_byte_limit (test_core_compatibility.BrowserCompatibility.test_auth_input_utf8_byte_limit) (multibyte=False) ... FAIL
+  test_auth_input_utf8_byte_limit (test_core_compatibility.BrowserCompatibility.test_auth_input_utf8_byte_limit) (multibyte=True) ... FAIL
+test_config_option_is_inert_and_never_read (test_core_compatibility.BrowserCompatibility.test_config_option_is_inert_and_never_read) ... 
+  test_config_option_is_inert_and_never_read (test_core_compatibility.BrowserCompatibility.test_config_option_is_inert_and_never_read) (option='--config /etc/passwd') ... ERROR
+test_config_option_is_inert_and_never_read (test_core_compatibility.BrowserCompatibility.test_config_option_is_inert_and_never_read) ... ERROR
+test_curl_comment_is_not_an_actual_header (test_core_compatibility.BrowserCompatibility.test_curl_comment_is_not_an_actual_header) ... FAIL
+test_opaque_cookie_content_remains_valid (test_core_compatibility.BrowserCompatibility.test_opaque_cookie_content_remains_valid) ... ok
+test_unpaired_surrogate_rejected_with_generic_error (test_core_compatibility.BrowserCompatibility.test_unpaired_surrogate_rejected_with_generic_error) ... 
+  test_unpaired_surrogate_rejected_with_generic_error (test_core_compatibility.BrowserCompatibility.test_unpaired_surrogate_rejected_with_generic_error) (value="'sid=secret\\ud800; uev2.id.session=b'") ... FAIL
+  test_unpaired_surrogate_rejected_with_generic_error (test_core_compatibility.BrowserCompatibility.test_unpaired_surrogate_rejected_with_generic_error) (value="'sid=a; uev2.id.session=b; ignored=\\udfff'") ... FAIL
+test_unpaired_surrogate_rejected_with_generic_error (test_core_compatibility.BrowserCompatibility.test_unpaired_surrogate_rejected_with_generic_error) ... FAIL
+test_dotted_meridiem_and_inherited_range (test_core_compatibility.DeliveryCompatibility.test_dotted_meridiem_and_inherited_range) ... 
+  test_dotted_meridiem_and_inherited_range (test_core_compatibility.DeliveryCompatibility.test_dotted_meridiem_and_inherited_range) (label='1:15 p.m.') ... FAIL
+  test_dotted_meridiem_and_inherited_range (test_core_compatibility.DeliveryCompatibility.test_dotted_meridiem_and_inherited_range) (label='11:55 p.m.–12:10 a.m.') ... FAIL
+test_numeric_string_coordinates_and_timestamp_units (test_core_compatibility.DeliveryCompatibility.test_numeric_string_coordinates_and_timestamp_units) ... 
+  test_numeric_string_coordinates_and_timestamp_units (test_core_compatibility.DeliveryCompatibility.test_numeric_string_coordinates_and_timestamp_units) (multiplier=1) ... FAIL
+  test_numeric_string_coordinates_and_timestamp_units (test_core_compatibility.DeliveryCompatibility.test_numeric_string_coordinates_and_timestamp_units) (multiplier=1000) ... FAIL
+  test_numeric_string_coordinates_and_timestamp_units (test_core_compatibility.DeliveryCompatibility.test_numeric_string_coordinates_and_timestamp_units) (multiplier=1000000) ... FAIL
+  test_numeric_string_coordinates_and_timestamp_units (test_core_compatibility.DeliveryCompatibility.test_numeric_string_coordinates_and_timestamp_units) (multiplier=1000000000) ... FAIL
+test_status_whitespace_normalized_case_and_punctuation_preserved (test_core_compatibility.DeliveryCompatibility.test_status_whitespace_normalized_case_and_punctuation_preserved) ... 
+  test_status_whitespace_normalized_case_and_punctuation_preserved (test_core_compatibility.DeliveryCompatibility.test_status_whitespace_normalized_case_and_punctuation_preserved) (raw='  Almost   there  ', field='titleSummary') ... FAIL
+  test_status_whitespace_normalized_case_and_punctuation_preserved (test_core_compatibility.DeliveryCompatibility.test_status_whitespace_normalized_case_and_punctuation_preserved) (raw='  Almost   there  ', field='timelineSummary') ... FAIL
+  test_status_whitespace_normalized_case_and_punctuation_preserved (test_core_compatibility.DeliveryCompatibility.test_status_whitespace_normalized_case_and_punctuation_preserved) (raw='  Heading your way\n', field='titleSummary') ... FAIL
+  test_status_whitespace_normalized_case_and_punctuation_preserved (test_core_compatibility.DeliveryCompatibility.test_status_whitespace_normalized_case_and_punctuation_preserved) (raw='  Heading your way\n', field='timelineSummary') ... FAIL
+  test_status_whitespace_normalized_case_and_punctuation_preserved (test_core_compatibility.DeliveryCompatibility.test_status_whitespace_normalized_case_and_punctuation_preserved) (raw='\tOn\nTHE\xa0way! ', field='titleSummary') ... FAIL
+  test_status_whitespace_normalized_case_and_punctuation_preserved (test_core_compatibility.DeliveryCompatibility.test_status_whitespace_normalized_case_and_punctuation_preserved) (raw='\tOn\nTHE\xa0way! ', field='timelineSummary') ... FAIL
+test_cookie_data_cannot_be_reinterpreted_as_option (test_core_contract.Cookies.test_cookie_data_cannot_be_reinterpreted_as_option) ... ok
+test_formats_and_repr (test_core_contract.Cookies.test_formats_and_repr) ... ok
+test_quoted_and_encoded (test_core_contract.Cookies.test_quoted_and_encoded) ... ok
+test_quoted_value_roundtrip (test_core_contract.Cookies.test_quoted_value_roundtrip) ... ok
+test_quoted_whitespace_is_preserved (test_core_contract.Cookies.test_quoted_whitespace_is_preserved) ... ok
+test_rotation_atomic_validated_and_partial (test_core_contract.Cookies.test_rotation_atomic_validated_and_partial) ... ok
+test_untrusted_fields_and_invalid_input (test_core_contract.Cookies.test_untrusted_fields_and_invalid_input) ... ok
+test_coordinate_without_route (test_core_contract.Decoder.test_coordinate_without_route) ... ok
+test_empty_and_bad_envelope (test_core_contract.Decoder.test_empty_and_bad_envelope) ... ok
+test_eta_midnight_dst_and_meridiem (test_core_contract.Decoder.test_eta_midnight_dst_and_meridiem) ... ok
+test_fallback_and_malformed_nested (test_core_contract.Decoder.test_fallback_and_malformed_nested) ... ok
+test_first_status_object_is_authoritative (test_core_contract.Decoder.test_first_status_object_is_authoritative) ... ok
+test_freshest_courier_dedup_and_invalid_fixes (test_core_contract.Decoder.test_freshest_courier_dedup_and_invalid_fixes) ... ok
+test_protocol_auth (test_core_contract.Decoder.test_protocol_auth) ... ok
+test_visible_status_courier_restaurant (test_core_contract.Decoder.test_visible_status_courier_restaurant) ... ok
+test_failures_and_rotation (test_core_contract.Gateways.test_failures_and_rotation) ... ok
+test_profile_optional_errors_and_auth (test_core_contract.Gateways.test_profile_optional_errors_and_auth) ... ok
+test_request_and_success (test_core_contract.Gateways.test_request_and_success) ... ok
+test_current_point_does_not_invent_timestamps (test_core_contract.Routes.test_current_point_does_not_invent_timestamps) ... ok
+test_gap_retains_position_and_late_samples_merge (test_core_contract.Routes.test_gap_retains_position_and_late_samples_merge) ... ok
+test_interpolation_freeze_and_reset (test_core_contract.Routes.test_interpolation_freeze_and_reset) ... ok
+test_long_gap_holds_then_resumes_contiguous_segment (test_core_contract.Routes.test_long_gap_holds_then_resumes_contiguous_segment) ... ok
+
+======================================================================
+ERROR: test_config_option_is_inert_and_never_read (test_core_compatibility.BrowserCompatibility.test_config_option_is_inert_and_never_read) (option='--config /etc/passwd')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/simple-uber-eats-v4-new/tests/test_core_compatibility.py", line 40, in test_config_option_is_inert_and_never_read
+    value = session.WebSession.parse(
+        "curl https://example.invalid " + option + " -H 'Cookie: sid=a; uev2.id.session=b'")
+  File "/tmp/simple-uber-eats-v4-new/custom_components/simple_uber_eats/web_session.py", line 154, in parse
+    raise CookieInputError()
+replacement_core.web_session.CookieInputError: Provide valid sid and uev2.id.session cookies
+
+======================================================================
+ERROR: test_config_option_is_inert_and_never_read (test_core_compatibility.BrowserCompatibility.test_config_option_is_inert_and_never_read)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/simple-uber-eats-v4-new/tests/test_core_compatibility.py", line 42, in test_config_option_is_inert_and_never_read
+    self.assertEqual(value.cookie_header(), 'sid=a; uev2.id.session=b')
+                     ^^^^^
+UnboundLocalError: cannot access local variable 'value' where it is not associated with a value
+
+======================================================================
+FAIL: test_auth_input_utf8_byte_limit (test_core_compatibility.BrowserCompatibility.test_auth_input_utf8_byte_limit) (multibyte=False)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/simple-uber-eats-v4-new/tests/test_core_compatibility.py", line 14, in test_auth_input_utf8_byte_limit
+    with self.assertRaises(session.CookieInputError):
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: CookieInputError not raised
+
+======================================================================
+FAIL: test_auth_input_utf8_byte_limit (test_core_compatibility.BrowserCompatibility.test_auth_input_utf8_byte_limit) (multibyte=True)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/simple-uber-eats-v4-new/tests/test_core_compatibility.py", line 14, in test_auth_input_utf8_byte_limit
+    with self.assertRaises(session.CookieInputError):
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: CookieInputError not raised
+
+======================================================================
+FAIL: test_curl_comment_is_not_an_actual_header (test_core_compatibility.BrowserCompatibility.test_curl_comment_is_not_an_actual_header)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/simple-uber-eats-v4-new/tests/test_core_compatibility.py", line 30, in test_curl_comment_is_not_an_actual_header
+    with self.assertRaises(session.CookieInputError):
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: CookieInputError not raised
+
+======================================================================
+FAIL: test_unpaired_surrogate_rejected_with_generic_error (test_core_compatibility.BrowserCompatibility.test_unpaired_surrogate_rejected_with_generic_error) (value="'sid=secret\\ud800; uev2.id.session=b'")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/simple-uber-eats-v4-new/tests/test_core_compatibility.py", line 23, in test_unpaired_surrogate_rejected_with_generic_error
+    with self.assertRaises(session.CookieInputError) as caught:
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: CookieInputError not raised
+
+======================================================================
+FAIL: test_unpaired_surrogate_rejected_with_generic_error (test_core_compatibility.BrowserCompatibility.test_unpaired_surrogate_rejected_with_generic_error) (value="'sid=a; uev2.id.session=b; ignored=\\udfff'")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/simple-uber-eats-v4-new/tests/test_core_compatibility.py", line 23, in test_unpaired_surrogate_rejected_with_generic_error
+    with self.assertRaises(session.CookieInputError) as caught:
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: CookieInputError not raised
+
+======================================================================
+FAIL: test_unpaired_surrogate_rejected_with_generic_error (test_core_compatibility.BrowserCompatibility.test_unpaired_surrogate_rejected_with_generic_error)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/simple-uber-eats-v4-new/tests/test_core_compatibility.py", line 26, in test_unpaired_surrogate_rejected_with_generic_error
+    with self.assertRaises(session.CookieInputError):
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: CookieInputError not raised
+
+======================================================================
+FAIL: test_dotted_meridiem_and_inherited_range (test_core_compatibility.DeliveryCompatibility.test_dotted_meridiem_and_inherited_range) (label='1:15 p.m.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/simple-uber-eats-v4-new/tests/test_core_compatibility.py", line 72, in test_dotted_meridiem_and_inherited_range
+    self.assertEqual(delivery.eta, expected)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: None != datetime.datetime(2026, 10, 19, 13, 15, tzinfo=datetime.timezone.utc)
+
+======================================================================
+FAIL: test_dotted_meridiem_and_inherited_range (test_core_compatibility.DeliveryCompatibility.test_dotted_meridiem_and_inherited_range) (label='11:55 p.m.–12:10 a.m.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/simple-uber-eats-v4-new/tests/test_core_compatibility.py", line 72, in test_dotted_meridiem_and_inherited_range
+    self.assertEqual(delivery.eta, expected)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: None != datetime.datetime(2026, 10, 20, 0, 10, tzinfo=datetime.timezone.utc)
+
+======================================================================
+FAIL: test_numeric_string_coordinates_and_timestamp_units (test_core_compatibility.DeliveryCompatibility.test_numeric_string_coordinates_and_timestamp_units) (multiplier=1)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/simple-uber-eats-v4-new/tests/test_core_compatibility.py", line 81, in test_numeric_string_coordinates_and_timestamp_units
+    self.assertEqual(result.courier_point, model.GeoPoint(20.25, -100.5))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: None != GeoPoint(latitude=20.25, longitude=-100.5)
+
+======================================================================
+FAIL: test_numeric_string_coordinates_and_timestamp_units (test_core_compatibility.DeliveryCompatibility.test_numeric_string_coordinates_and_timestamp_units) (multiplier=1000)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/simple-uber-eats-v4-new/tests/test_core_compatibility.py", line 81, in test_numeric_string_coordinates_and_timestamp_units
+    self.assertEqual(result.courier_point, model.GeoPoint(20.25, -100.5))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: None != GeoPoint(latitude=20.25, longitude=-100.5)
+
+======================================================================
+FAIL: test_numeric_string_coordinates_and_timestamp_units (test_core_compatibility.DeliveryCompatibility.test_numeric_string_coordinates_and_timestamp_units) (multiplier=1000000)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/simple-uber-eats-v4-new/tests/test_core_compatibility.py", line 81, in test_numeric_string_coordinates_and_timestamp_units
+    self.assertEqual(result.courier_point, model.GeoPoint(20.25, -100.5))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: None != GeoPoint(latitude=20.25, longitude=-100.5)
+
+======================================================================
+FAIL: test_numeric_string_coordinates_and_timestamp_units (test_core_compatibility.DeliveryCompatibility.test_numeric_string_coordinates_and_timestamp_units) (multiplier=1000000000)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/simple-uber-eats-v4-new/tests/test_core_compatibility.py", line 81, in test_numeric_string_coordinates_and_timestamp_units
+    self.assertEqual(result.courier_point, model.GeoPoint(20.25, -100.5))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: None != GeoPoint(latitude=20.25, longitude=-100.5)
+
+======================================================================
+FAIL: test_status_whitespace_normalized_case_and_punctuation_preserved (test_core_compatibility.DeliveryCompatibility.test_status_whitespace_normalized_case_and_punctuation_preserved) (raw='  Almost   there  ', field='titleSummary')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/simple-uber-eats-v4-new/tests/test_core_compatibility.py", line 63, in test_status_whitespace_normalized_case_and_punctuation_preserved
+    self.assertEqual(result.status, expected)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: '  Almost   there  ' != 'Almost there'
+-   Almost   there  
+? --       --     --
++ Almost there
+
+
+======================================================================
+FAIL: test_status_whitespace_normalized_case_and_punctuation_preserved (test_core_compatibility.DeliveryCompatibility.test_status_whitespace_normalized_case_and_punctuation_preserved) (raw='  Almost   there  ', field='timelineSummary')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/simple-uber-eats-v4-new/tests/test_core_compatibility.py", line 63, in test_status_whitespace_normalized_case_and_punctuation_preserved
+    self.assertEqual(result.status, expected)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: '  Almost   there  ' != 'Almost there'
+-   Almost   there  
+? --       --     --
++ Almost there
+
+
+======================================================================
+FAIL: test_status_whitespace_normalized_case_and_punctuation_preserved (test_core_compatibility.DeliveryCompatibility.test_status_whitespace_normalized_case_and_punctuation_preserved) (raw='  Heading your way\n', field='titleSummary')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/simple-uber-eats-v4-new/tests/test_core_compatibility.py", line 63, in test_status_whitespace_normalized_case_and_punctuation_preserved
+    self.assertEqual(result.status, expected)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: '  Heading your way\n' != 'Heading your way'
+-   Heading your way
+? --
++ Heading your way
+- 
+
+
+======================================================================
+FAIL: test_status_whitespace_normalized_case_and_punctuation_preserved (test_core_compatibility.DeliveryCompatibility.test_status_whitespace_normalized_case_and_punctuation_preserved) (raw='  Heading your way\n', field='timelineSummary')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/simple-uber-eats-v4-new/tests/test_core_compatibility.py", line 63, in test_status_whitespace_normalized_case_and_punctuation_preserved
+    self.assertEqual(result.status, expected)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: '  Heading your way\n' != 'Heading your way'
+-   Heading your way
+? --
++ Heading your way
+- 
+
+
+======================================================================
+FAIL: test_status_whitespace_normalized_case_and_punctuation_preserved (test_core_compatibility.DeliveryCompatibility.test_status_whitespace_normalized_case_and_punctuation_preserved) (raw='\tOn\nTHE\xa0way! ', field='titleSummary')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/simple-uber-eats-v4-new/tests/test_core_compatibility.py", line 63, in test_status_whitespace_normalized_case_and_punctuation_preserved
+    self.assertEqual(result.status, expected)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: '\tOn\nTHE\xa0way! ' != 'On THE way!'
++ On THE way!
+- 	On
+- THE way! 
+
+
+======================================================================
+FAIL: test_status_whitespace_normalized_case_and_punctuation_preserved (test_core_compatibility.DeliveryCompatibility.test_status_whitespace_normalized_case_and_punctuation_preserved) (raw='\tOn\nTHE\xa0way! ', field='timelineSummary')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/simple-uber-eats-v4-new/tests/test_core_compatibility.py", line 63, in test_status_whitespace_normalized_case_and_punctuation_preserved
+    self.assertEqual(result.status, expected)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: '\tOn\nTHE\xa0way! ' != 'On THE way!'
++ On THE way!
+- 	On
+- THE way! 
+
+
+----------------------------------------------------------------------
+Ran 30 tests in 0.085s
+
+FAILED (failures=18, errors=2)

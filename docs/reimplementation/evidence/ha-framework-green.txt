@@ -1,0 +1,8 @@
+/tmp/simple-uber-eats-v4-venv/lib64/python3.14/site-packages/homeassistant/components/http/server.py:156: DeprecationWarning: Inheritance class HomeAssistantApplication from web.Application is discouraged
+  class HomeAssistantApplication(web.Application):
+Executing <Task finished name='Task-2' coro=<FrameworkTests.test_data_updates_do_not_reload_options_updates_do() done, defined at /tmp/simple-uber-eats-v4-new/tests/test_ha_framework.py:25> result=None created at /usr/lib64/python3.14/asyncio/runners.py:109> took 0.582 seconds
+.................
+----------------------------------------------------------------------
+Ran 17 tests in 0.638s
+
+OK
