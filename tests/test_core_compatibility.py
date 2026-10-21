@@ -1,6 +1,7 @@
 """New synthetic cases from functional compatibility observations only."""
 
 import unittest
+from datetime import UTC
 from http.cookies import SimpleCookie
 from unittest.mock import patch
 
@@ -193,7 +194,7 @@ class AuthenticationCompatibility(unittest.IsolatedAsyncioTestCase):
         self.assertIsNone(model.AuthRejected().http_status)
         for status in (401, 403):
             gateway = wire.Gateway(
-                Http(Response(status)), session.WebSession("a", "b"), "UTC"
+                Http(Response(status)), session.WebSession("a", "b"), UTC
             )
             with self.assertRaises(model.AuthRejected) as caught:
                 await gateway.read_orders()
@@ -201,7 +202,7 @@ class AuthenticationCompatibility(unittest.IsolatedAsyncioTestCase):
         gateway = wire.Gateway(
             Http(Response(payload={"error": {"code": "INVALID_TOKEN"}})),
             session.WebSession("a", "b"),
-            "UTC",
+            UTC,
         )
         with self.assertRaises(model.AuthRejected) as caught:
             await gateway.read_orders()
@@ -213,7 +214,7 @@ class ProfileEndpointCompatibility(unittest.IsolatedAsyncioTestCase):
         http = Http(
             Response(payload={"data": {"firstName": "Ada", "lastName": "Lovelace"}})
         )
-        gateway = wire.Gateway(http, session.WebSession("opaque", "opaque"), "UTC")
+        gateway = wire.Gateway(http, session.WebSession("opaque", "opaque"), UTC)
         self.assertEqual(await gateway.account_label(), "Ada Lovelace")
         self.assertEqual(
             http.calls[0][0],

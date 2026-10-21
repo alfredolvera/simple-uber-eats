@@ -338,7 +338,7 @@ class Http:
 class Gateways(unittest.IsolatedAsyncioTestCase):
     async def test_request_and_success(self):
         http = Http(Response(payload=envelope(), cookies=SimpleCookie("sid=rotated")))
-        gateway = wire.Gateway(http, session.WebSession("a", "b"), "UTC")
+        gateway = wire.Gateway(http, session.WebSession("a", "b"), UTC)
         self.assertIsNone((await gateway.read_orders()).primary)
         self.assertEqual(gateway.credentials.sid, "rotated")
         url, args = http.calls[0]
@@ -364,7 +364,7 @@ class Gateways(unittest.IsolatedAsyncioTestCase):
                     )
                 ),
                 session.WebSession("a", "b"),
-                "UTC",
+                UTC,
             )
             with self.assertRaises(exception) as caught:
                 await gateway.read_orders()
@@ -372,7 +372,7 @@ class Gateways(unittest.IsolatedAsyncioTestCase):
             if status == 429:
                 self.assertEqual(caught.exception.retry_after, 120)
         gateway = wire.Gateway(
-            Http(TimeoutError("secret")), session.WebSession("a", "b"), "UTC"
+            Http(TimeoutError("secret")), session.WebSession("a", "b"), UTC
         )
         with self.assertRaises(model.ServiceUnavailable) as caught:
             await gateway.read_orders()
@@ -386,11 +386,11 @@ class Gateways(unittest.IsolatedAsyncioTestCase):
             (ValueError("secret"), None),
         ):
             gateway = wire.Gateway(
-                Http(Response(payload=payload)), session.WebSession("a", "b"), "UTC"
+                Http(Response(payload=payload)), session.WebSession("a", "b"), UTC
             )
             self.assertEqual(await gateway.account_label(), expected)
-        gateway = wire.Gateway(Http(Response(500)), session.WebSession("a", "b"), "UTC")
+        gateway = wire.Gateway(Http(Response(500)), session.WebSession("a", "b"), UTC)
         self.assertIsNone(await gateway.account_label())
-        gateway = wire.Gateway(Http(Response(401)), session.WebSession("a", "b"), "UTC")
+        gateway = wire.Gateway(Http(Response(401)), session.WebSession("a", "b"), UTC)
         with self.assertRaises(model.AuthRejected):
             await gateway.account_label()

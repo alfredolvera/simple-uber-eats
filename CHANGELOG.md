@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.0.1] - 2026-10-21
+
+### Fixed
+
+- Resolves configured time zones with Home Assistant's asynchronous time zone helper before constructing the gateway, avoiding blocking disk reads on the event loop.
+- Applies the same handling to setup, initial configuration, reauthentication, reconfiguration, legacy import and entry migration, preserving IANA names and invalid-zone fallbacks.
+- Adds cold-cache regression checks against real Home Assistant APIs, including local ETA conversion and invalid submitted zones.
+
 ## [4.0.0] - 2026-10-19
 
 ### Changed

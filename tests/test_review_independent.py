@@ -1,7 +1,7 @@
 """Independent reviewer checks using real framework/transport imports."""
 import importlib
 import unittest
-from datetime import datetime
+from datetime import UTC, datetime
 from functools import partial
 from http.cookies import SimpleCookie
 from unittest.mock import patch
@@ -40,7 +40,7 @@ class ReviewChecks(unittest.IsolatedAsyncioTestCase):
                 SimpleCookie('sid=account_A; uev2.id.session=session_A; unrelated=private'),
                 URL('https://www.ubereats.com/'),
             )
-            gateway = wire.Gateway(http, session_module.WebSession('account_B', 'session_B'), 'UTC')
+            gateway = wire.Gateway(http, session_module.WebSession('account_B', 'session_B'), UTC)
             with self.assertRaises(Captured):
                 await gateway.read_orders()
         finally:

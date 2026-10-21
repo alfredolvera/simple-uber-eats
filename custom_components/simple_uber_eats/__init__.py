@@ -8,7 +8,7 @@ from .compatibility import adopt_selected_legacy
 from .http import create_session
 from .model import AuthRejected, ServiceUnavailable
 from .runtime import UberCoordinator
-from .settings import clean_entry_data, valid_timezone
+from .settings import async_valid_timezone, clean_entry_data
 from .web_session import CookieInputError, WebSession
 from .wire import Gateway
 
@@ -17,8 +17,11 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.DEVICE_TRACKER]
 
 async def async_setup_entry(hass, entry):
     """Validate active orders first; optional profile cannot block setup."""
+    timezone = await async_valid_timezone(
+        entry.data.get("time_zone"), hass.config.time_zone
+    )
     try:
-        data = clean_entry_data(entry.data, hass.config.time_zone)
+        data = clean_entry_data(entry.data, timezone)
         credentials = WebSession(data["sid"], data["session_id"])
     except (CookieInputError, ValueError, TypeError):
         raise ConfigEntryAuthFailed("Session credentials must be renewed") from None
@@ -27,7 +30,7 @@ async def async_setup_entry(hass, entry):
     session = create_session(hass)
     entry.async_on_unload(session.detach)
     try:
-        gateway = Gateway(session, credentials, data["time_zone"])
+        gateway = Gateway(session, credentials, timezone)
         coordinator = UberCoordinator(hass, entry, gateway)
         await coordinator.async_config_entry_first_refresh()
         if not data.get("account_name"):
@@ -72,16 +75,17 @@ async def async_migrate_entry(hass, entry):
     if entry.domain != "simple_uber_eats" or entry.version > 2:
         return False
     if entry.version == 1:
+        timezone = await async_valid_timezone(
+            entry.data.get("time_zone"), hass.config.time_zone
+        )
         try:
-            data = clean_entry_data(entry.data, hass.config.time_zone)
+            data = clean_entry_data(entry.data, timezone)
         except (CookieInputError, ValueError, TypeError):
             # Setup raises ConfigEntryAuthFailed and starts a credential flow.
             data = {
                 "sid": "",
                 "session_id": "",
-                "time_zone": valid_timezone(
-                    entry.data.get("time_zone"), hass.config.time_zone
-                ),
+                "time_zone": getattr(timezone, "key", "UTC"),
             }
             name = entry.data.get("account_name")
             if isinstance(name, str) and name.strip():
