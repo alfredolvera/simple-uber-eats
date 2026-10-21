@@ -6,11 +6,12 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, OptionsFlow
 from homeassistant.core import callback
 from homeassistant.helpers import selector
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, PHONE_OPTION, PHOTO_OPTION
 from .http import create_session
 from .model import AuthRejected, ServiceUnavailable
-from .settings import clean_entry_data, valid_timezone
+from .settings import async_valid_timezone, clean_entry_data
 from .web_session import CookieInputError, WebSession
 from .wire import Gateway
 
@@ -29,17 +30,22 @@ class UberEatsConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _credentials_step(self, step_id, user_input=None, entry=None):
         errors = {}
         defaults = entry.data if entry else {}
-        timezone = valid_timezone(defaults.get("time_zone"), self.hass.config.time_zone)
+        timezone = await async_valid_timezone(
+            defaults.get("time_zone"), self.hass.config.time_zone
+        )
         if user_input is not None:
             try:
                 credentials = WebSession.parse(user_input["cookie"])
                 submitted_zone = user_input["time_zone"]
-                if submitted_zone not in TIMEZONES:
+                resolved_zone = None
+                if isinstance(submitted_zone, str) and submitted_zone in TIMEZONES:
+                    resolved_zone = await dt_util.async_get_time_zone(submitted_zone)
+                if resolved_zone is None:
                     errors["time_zone"] = "invalid_timezone"
                 else:
                     session = create_session(self.hass)
                     try:
-                        gateway = Gateway(session, credentials, submitted_zone)
+                        gateway = Gateway(session, credentials, resolved_zone)
                         await gateway.read_orders()
                         try:
                             name = await gateway.account_label()
@@ -79,7 +85,9 @@ class UberEatsConfigFlow(ConfigFlow, domain=DOMAIN):
                 vol.Required("cookie"): selector.TextSelector(
                     selector.TextSelectorConfig(multiline=True)
                 ),
-                vol.Required("time_zone", default=timezone): selector.SelectSelector(
+                vol.Required(
+                    "time_zone", default=getattr(timezone, "key", "UTC")
+                ): selector.SelectSelector(
                     selector.SelectSelectorConfig(
                         options=TIMEZONES, mode=selector.SelectSelectorMode.DROPDOWN
                     )
@@ -115,8 +123,11 @@ class UberEatsConfigFlow(ConfigFlow, domain=DOMAIN):
             if selected is None:
                 return self.async_abort(reason="no_legacy_entries")
             try:
+                timezone = await async_valid_timezone(
+                    selected.data.get("time_zone"), self.hass.config.time_zone
+                )
                 try:
-                    data = clean_entry_data(selected.data, self.hass.config.time_zone)
+                    data = clean_entry_data(selected.data, timezone)
                 except (CookieInputError, ValueError, TypeError):
                     raw = selected.data.get("full_cookie") or selected.data.get(
                         "cookie"
@@ -124,12 +135,12 @@ class UberEatsConfigFlow(ConfigFlow, domain=DOMAIN):
                     restored = WebSession.parse(raw)
                     data = clean_entry_data(
                         {**selected.data, **restored.as_entry_data()},
-                        self.hass.config.time_zone,
+                        timezone,
                     )
                 credentials = WebSession(data["sid"], data["session_id"])
                 session = create_session(self.hass)
                 try:
-                    gateway = Gateway(session, credentials, data["time_zone"])
+                    gateway = Gateway(session, credentials, timezone)
                     await gateway.read_orders()
                     data.update(gateway.credentials.as_entry_data())
                 finally:

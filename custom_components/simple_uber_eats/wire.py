@@ -2,7 +2,7 @@
 
 import math
 import re
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, tzinfo
 from email.utils import parsedate_to_datetime
 
 import aiohttp
@@ -244,13 +244,11 @@ def decode_orders(payload: object, now: datetime) -> Snapshot:
 
 
 class Gateway:
-    def __init__(self, http_session, credentials: WebSession, timezone: str) -> None:
-        from zoneinfo import ZoneInfo
-
+    def __init__(self, http_session, credentials: WebSession, timezone: tzinfo) -> None:
         self._http = http_session
         self.credentials = credentials
-        self._timezone = ZoneInfo(timezone)
-        self._timezone_name = timezone
+        self._timezone = timezone
+        self._timezone_name = getattr(timezone, "key", "UTC")
 
     async def _request(self, path: str, body: dict) -> object:
         headers = {

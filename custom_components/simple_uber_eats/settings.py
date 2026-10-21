@@ -1,25 +1,29 @@
 """Validated minimal persisted entry data."""
 
-from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+from datetime import UTC, tzinfo
+
+from homeassistant.util import dt as dt_util
 
 from .web_session import WebSession
 
 
-def valid_timezone(value, fallback="UTC") -> str:
-    """Resolve user or system timezone to a valid IANA zone."""
+async def async_valid_timezone(value, fallback="UTC") -> tzinfo:
+    """Resolve a user or system zone without disk I/O on the event loop."""
     for candidate in (value, fallback, "UTC"):
         if not isinstance(candidate, str):
             continue
         try:
-            ZoneInfo(candidate)
-        except (ValueError, ZoneInfoNotFoundError):
+            timezone = await dt_util.async_get_time_zone(candidate)
+        except ValueError:
+            # Absolute or otherwise malformed ZoneInfo keys are invalid too.
             continue
-        return candidate
-    return "UTC"
+        if timezone is not None:
+            return timezone
+    return UTC
 
 
-def clean_entry_data(data, fallback="UTC") -> dict:
-    """Drop historical cookie dumps and unrelated legacy keys."""
+def clean_entry_data(data, timezone: tzinfo) -> dict:
+    """Drop legacy keys and persist the name of an already resolved zone."""
     credentials = WebSession(data.get("sid", ""), data.get("session_id", ""))
     result = credentials.as_entry_data()
     name = data.get("account_name")
@@ -28,5 +32,5 @@ def clean_entry_data(data, fallback="UTC") -> dict:
     legacy = data.get("legacy_entry_id")
     if isinstance(legacy, str) and legacy:
         result["legacy_entry_id"] = legacy
-    result["time_zone"] = valid_timezone(data.get("time_zone"), fallback)
+    result["time_zone"] = getattr(timezone, "key", "UTC")
     return result

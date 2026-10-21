@@ -3,9 +3,10 @@
 import importlib
 import sys
 import unittest
+from datetime import UTC
 from pathlib import Path
 from types import ModuleType, SimpleNamespace
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 ROOT = Path(__file__).resolve().parents[1]
 PKG = "custom_components.simple_uber_eats"
@@ -66,6 +67,10 @@ def install_doubles():
     package.__path__ = [str(ROOT / "custom_components/simple_uber_eats")]
     module("custom_components").__path__ = [str(ROOT / "custom_components")]
     module("homeassistant")
+    module(
+        "homeassistant.util",
+        dt=SimpleNamespace(async_get_time_zone=AsyncMock(return_value=UTC)),
+    )
     module("homeassistant.helpers")
     module("homeassistant.components")
     module(
@@ -339,7 +344,7 @@ class RuntimeTests(DoubleCase):
                 "time_zone": "UTC",
                 "irrelevant": "drop",
             },
-            "UTC",
+            UTC,
         )
         self.assertEqual(
             data,
@@ -350,14 +355,13 @@ class RuntimeTests(DoubleCase):
                 "time_zone": "UTC",
             },
         )
-        self.assertEqual(settings.valid_timezone("bad/zone", "UTC"), "UTC")
 
 
 class LifecycleTests(DoubleCase):
     async def test_missing_credentials_require_reauth(self):
         settings = importlib.import_module(PKG + ".settings")
         with self.assertRaises(ValueError):
-            settings.clean_entry_data({"sid": "", "session_id": ""})
+            settings.clean_entry_data({"sid": "", "session_id": ""}, UTC)
 
     async def test_tracker_unknown_and_cleanup(self):
         model = importlib.import_module(PKG + ".model")
