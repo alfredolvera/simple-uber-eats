@@ -1,0 +1,206 @@
+views:
+- title: Uber Eats
+  path: uber-eats
+  icon: mdi:food-delivery
+  type: panel
+  cards:
+  - type: custom:button-card
+    show_name: false
+    show_icon: false
+    tap_action:
+      action: none
+    hold_action:
+      action: none
+    custom_fields:
+      info:
+        card:
+          type: custom:button-card
+          show_name: true
+          name: |
+            [[[[
+              const restaurant =
+                states['sensor.YOUR_ACCOUNT_uber_eats_restaurant']?.state;
+
+              if (
+                !restaurant ||
+                restaurant === 'unknown' ||
+                restaurant === 'unavailable'
+              ) {
+                return '';
+              }
+
+              return String(restaurant).replace(/\s+(🛒)\s*$/u, '\u00a0$1');
+            ]]]]
+          show_icon: false
+          show_label: true
+          label: |-
+            [[[[
+            const s = states['sensor.YOUR_ACCOUNT_uber_eats_eta'];
+            const valid = s && !['unknown', 'unavailable', 'none', ''].includes(s.state);
+            const target = valid ? Date.parse(s.state) : NaN;
+            const seconds = Math.floor((target - Date.now()) / 1000);
+            const text = !Number.isFinite(seconds) ? '—'
+              : seconds <= 0 ? 'Arriving'
+              : Math.floor(seconds / 60) + ':' + String(seconds % 60).padStart(2, '0');
+            const family = 'Roboto, Arial, sans-serif';
+            const ctx = document.createElement('canvas').getContext('2d');
+            ctx.font = '650 100px ' + family;
+            const metrics = ctx.measureText(text);
+            const left = Math.max(0, metrics.actualBoundingBoxLeft || 0);
+            const right = Math.max(metrics.width, metrics.actualBoundingBoxRight || 0);
+            const width = Math.ceil(left + right) + 4;
+            const ascent = Math.ceil(metrics.fontBoundingBoxAscent || 96);
+            const descent = Math.ceil(metrics.fontBoundingBoxDescent || 24);
+            const height = ascent + descent + 4;
+            return '<svg xmlns="http://www.w3.org/2000/svg" role="img" aria-label="' + text
+              + '" width="100%" viewBox="0 0 ' + width + ' ' + height
+              + '" preserveAspectRatio="xMinYMid meet" style="display:block;width:100%;height:auto;max-width:100%;color:inherit">'
+              + '<text x="' + (left + 2) + '" y="' + (ascent + 2)
+              + '" font-family="' + family + '" font-size="100" font-weight="650" letter-spacing="0" fill="currentColor">'
+              + text + '</text></svg>';
+            ]]]]
+          entity: sensor.YOUR_ACCOUNT_uber_eats_eta
+          triggers_update:
+          - sensor.YOUR_ACCOUNT_uber_eats_eta
+          - sensor.YOUR_ACCOUNT_uber_eats_restaurant
+          - sensor.YOUR_ACCOUNT_uber_eats_order_status
+          update_timer: 1000
+          tap_action:
+            action: none
+          hold_action:
+            action: none
+          custom_fields:
+            logo: <div class="uber-logo">Uber<br><span>Eats</span></div>
+            status: |-
+              [[[[
+              const s = states['sensor.YOUR_ACCOUNT_uber_eats_order_status'];
+              const raw = String(s?.state || '');
+              const missing = !raw || ['unknown', 'none'].includes(raw);
+              const unavailable = raw === 'unavailable';
+              const text = unavailable ? 'Status unavailable' : missing ? 'No active order' : raw;
+              const safe = text.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+              const color = missing || unavailable ? '#8b969d' : '#3fc889';
+              return '<span class="status-dot" style="background:' + color + '"></span><span>' + safe + '</span>';
+              ]]]]
+            caption: Estimated time of arrival
+          styles:
+            card:
+            - background: transparent
+            - box-shadow: none
+            - border: none
+            - padding: '0'
+            - height: 100%
+            - overflow: visible
+            - cursor: default
+            grid:
+            - grid-template-areas: '"logo" "n" "status" "l" "caption"'
+            - grid-template-columns: minmax(0, 1fr)
+            - grid-template-rows: repeat(5, min-content)
+            - align-content: center
+            - justify-items: start
+            - row-gap: clamp(18px, 4dvh, 28px)
+            - text-align: left
+            - height: 100%
+            name:
+            - justify-self: start
+            - text-align: left
+            - white-space: normal
+            - font-size: clamp(30px, 3.8vw, 46px)
+            - font-weight: 600
+            - line-height: '1.1'
+            - overflow: visible
+            label:
+            - justify-self: stretch
+            - width: 100%
+            - max-width: 100%
+            - min-width: '0'
+            - box-sizing: border-box
+            - padding: '0'
+            - font-size: '0'
+            - letter-spacing: '0'
+            - line-height: '0'
+            - overflow: hidden
+            - white-space: nowrap
+            - text-align: left
+            custom_fields:
+              logo:
+              - justify-self: start
+              - text-align: left
+              status:
+              - justify-self: start
+              - white-space: normal
+              - text-align: left
+              - font-size: clamp(23px, 2.8vw, 36px)
+              - line-height: '1.25'
+              - display: flex
+              - align-items: flex-start
+              - gap: 10px
+              caption:
+              - justify-self: start
+              - text-align: left
+              - white-space: normal
+              - font-size: clamp(20px, 2.4vw, 30px)
+              - color: '#a7b1ba'
+              - line-height: '1.2'
+          extra_styles: |
+            :host { display: block; height: 100%; container-type: inline-size; }
+            .uber-logo { font-size: 40px; font-weight: 600; line-height: .95; letter-spacing: -1.5px; } .uber-logo span { color: #3fc889; } .status-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: .5em; } @media(max-width: 700px) { #container { row-gap: 16px !important; } }
+      map:
+        card:
+          type: map
+          entities:
+          - entity: sensor.YOUR_ACCOUNT_uber_eats_restaurant
+            name: Rest
+            color: red
+            label_mode: icon
+            focus: false
+          - entity: zone.home
+          - entity: device_tracker.YOUR_ACCOUNT_uber_eats_courier
+            color: green
+            label_mode: icon
+          geo_location_sources: []
+          hours_to_show: 0.5
+          default_zoom: 30
+          auto_fit: true
+          fit_zones: true
+          show_zone_radius: false
+          cluster: false
+          theme_mode: dark
+          scale_ruler: false
+          card_mod:
+            style: |
+              :host { display: block; height: 100%; }
+              ha-card { height: 100% !important; overflow: hidden; border-radius: 20px; border: 1px solid rgba(167,177,186,.2); }
+              #root { height: 100% !important; padding-bottom: 0 !important; }
+    styles:
+      card:
+      - background: rgba(5, 12, 15, .45)
+      - box-shadow: none
+      - border: none
+      - border-radius: '0'
+      - padding: 24px
+      - height: calc(100vh - 8px)
+      - height: calc(100dvh - 8px)
+      - box-sizing: border-box
+      - cursor: default
+      grid:
+      - grid-template-areas: '"info map"'
+      - grid-template-columns: minmax(0, 35fr) minmax(0, 65fr)
+      - grid-template-rows: minmax(0, 1fr)
+      - gap: 24px
+      - height: 100%
+      custom_fields:
+        info:
+        - height: 100%
+        - min-width: '0'
+        - padding: 0 12px
+        - box-sizing: border-box
+        map:
+        - height: 100%
+        - min-width: '0'
+    extra_styles: |-
+      @media (max-width: 700px) {
+        ha-card { height: auto !important; min-height: calc(100dvh - 8px); padding: 20px !important; }
+        #container { grid-template-areas: 'info' 'map' !important; grid-template-columns: minmax(0, 1fr) !important; grid-template-rows: auto minmax(320px, 55dvh) !important; gap: 24px !important; }
+        #info { height: auto !important; padding: 8px 0 !important; }
+      }
