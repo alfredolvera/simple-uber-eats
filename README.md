@@ -73,17 +73,16 @@ to account-entry identifiers while preserving entity IDs, custom names and label
 
 For accounts with multiple simultaneous orders, the entities represent the first active order returned by Uber. Each config entry has its own independent entity set.
 
-## Tablet dashboard
+## Dashboard example
 
-![Uber Eats tablet dashboard with map and restaurant name blurred for privacy](docs/images/uber-eats-tablet.png)
+![Uber Eats dashboard with map and restaurant name blurred for privacy](docs/images/uber-eats-dashboard.png)
 
-The tablet view below comes from **Notifications → Uber Eats**. It shows the
-restaurant, Uber's order status, a large live ETA countdown, and a native map
+This view shows the restaurant, Uber's order status, a large live ETA countdown, and a native map
 with the restaurant, home zone, and courier. On narrow screens, the map moves
 below the order information.
 
-The screenshot was captured from a tablet displaying an active order. The entire
-map and restaurant name are blurred for privacy. Map data ©
+The screenshot shows an active order. The entire map and restaurant name are
+blurred for privacy. Map data ©
 [OpenStreetMap contributors](https://www.openstreetmap.org/copyright).
 
 Install [`custom:button-card`](https://github.com/custom-cards/button-card) and
@@ -97,12 +96,11 @@ with the corresponding entity from your Simple Uber Eats device, and change
 `zone.home` if you want a different home zone.
 
 The reusable configuration is also available as
-[`docs/dashboards/uber-eats-tablet.yaml`](docs/dashboards/uber-eats-tablet.yaml).
-The personal uploaded background is omitted; choose your own background and
-dark theme in Home Assistant. The view icon uses a built-in Material Design icon.
+[`docs/dashboards/uber-eats.yaml`](docs/dashboards/uber-eats.yaml).
+Choose your own background and dark theme in Home Assistant. The view icon uses a built-in Material Design icon.
 
 <details>
-<summary>Full tablet dashboard YAML</summary>
+<summary>Full Uber Eats view YAML</summary>
 
 ```yaml
 views:
