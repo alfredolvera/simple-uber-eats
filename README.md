@@ -6,7 +6,7 @@
 
 A lightweight Home Assistant custom integration for tracking active Uber Eats orders using native Home Assistant entities.
 
-![Uber Eats tablet dashboard with map and restaurant name blurred for privacy](docs/images/uber-eats-tablet.png)
+![Simple Uber Eats in Home Assistant](docs/images/simple-uber-eats-overview.png)
 
 ## Overview
 
@@ -74,6 +74,8 @@ to account-entry identifiers while preserving entity IDs, custom names and label
 For accounts with multiple simultaneous orders, the entities represent the first active order returned by Uber. Each config entry has its own independent entity set.
 
 ## Tablet dashboard
+
+![Uber Eats tablet dashboard with map and restaurant name blurred for privacy](docs/images/uber-eats-tablet.png)
 
 The tablet view below comes from **Notifications → Uber Eats**. It shows the
 restaurant, Uber's order status, a large live ETA countdown, and a native map
