@@ -1,0 +1,102 @@
+{
+  "title": "Simple Uber Eats",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Conectar Uber Eats",
+        "description": "Usa una computadora con Chrome, Edge o Firefox. No necesitas tener un pedido activo.\n\n1. Abre [ubereats.com](https://www.ubereats.com/) en otra pestaña e **inicia sesión** con la cuenta que quieres conectar.\n2. Presiona **F12** para abrir las **Herramientas para desarrolladores (Developer Tools)**. Si no se abren, presiona **Ctrl+Mayús+I** (Mac: **Comando+Opción+I**).\n3. Selecciona la pestaña **Red (Network)**. Deja las herramientas abiertas y **recarga la página de Uber Eats** para que aparezcan las peticiones.\n4. En el cuadro **Filtrar (Filter)** de esa pestaña, escribe **getActiveOrdersV1**. Si no aparece nada, borra el filtro, recarga otra vez y prueba con **getUserV1**.\n5. Haz **clic derecho sobre la petición** que aparece en la lista. Elige **Copiar → Copiar como cURL (Copy → Copy as cURL)**. Si hay varias opciones, selecciona **cURL (bash)**.\n6. Vuelve aquí y **pega todo el texto copiado** en **Sesión de Uber Eats**, debajo. Revisa tu zona horaria y pulsa **Enviar**.\n\nSolo tienes que copiar la petición; no necesitas ejecutarla en una terminal. Contiene acceso a tu cuenta: pégala únicamente aquí y no la compartas.",
+        "data": {
+          "cookie": "Sesión de Uber Eats (pega la petición copiada)",
+          "time_zone": "Zona horaria"
+        },
+        "menu_options": {
+          "connect": "Conectar una cuenta de Uber Eats",
+          "import_legacy": "Importar una cuenta existente de Uber Eats"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Renovar la sesión de Uber Eats",
+        "description": "Uber Eats ya no acepta la sesión guardada. Sigue estos pasos para renovarla.\n\nUsa una computadora con Chrome, Edge o Firefox. No necesitas tener un pedido activo.\n\n1. Abre [ubereats.com](https://www.ubereats.com/) en otra pestaña e **inicia sesión** con la cuenta que quieres conectar.\n2. Presiona **F12** para abrir las **Herramientas para desarrolladores (Developer Tools)**. Si no se abren, presiona **Ctrl+Mayús+I** (Mac: **Comando+Opción+I**).\n3. Selecciona la pestaña **Red (Network)**. Deja las herramientas abiertas y **recarga la página de Uber Eats** para que aparezcan las peticiones.\n4. En el cuadro **Filtrar (Filter)** de esa pestaña, escribe **getActiveOrdersV1**. Si no aparece nada, borra el filtro, recarga otra vez y prueba con **getUserV1**.\n5. Haz **clic derecho sobre la petición** que aparece en la lista. Elige **Copiar → Copiar como cURL (Copy → Copy as cURL)**. Si hay varias opciones, selecciona **cURL (bash)**.\n6. Vuelve aquí y **pega todo el texto copiado** en **Sesión de Uber Eats**, debajo. Revisa tu zona horaria y pulsa **Enviar**.\n\nSolo tienes que copiar la petición; no necesitas ejecutarla en una terminal. Contiene acceso a tu cuenta: pégala únicamente aquí y no la compartas.",
+        "data": {
+          "cookie": "Sesión de Uber Eats (pega la petición copiada)",
+          "time_zone": "Zona horaria"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigurar Uber Eats",
+        "description": "Usa una computadora con Chrome, Edge o Firefox. No necesitas tener un pedido activo.\n\n1. Abre [ubereats.com](https://www.ubereats.com/) en otra pestaña e **inicia sesión** con la cuenta que quieres conectar.\n2. Presiona **F12** para abrir las **Herramientas para desarrolladores (Developer Tools)**. Si no se abren, presiona **Ctrl+Mayús+I** (Mac: **Comando+Opción+I**).\n3. Selecciona la pestaña **Red (Network)**. Deja las herramientas abiertas y **recarga la página de Uber Eats** para que aparezcan las peticiones.\n4. En el cuadro **Filtrar (Filter)** de esa pestaña, escribe **getActiveOrdersV1**. Si no aparece nada, borra el filtro, recarga otra vez y prueba con **getUserV1**.\n5. Haz **clic derecho sobre la petición** que aparece en la lista. Elige **Copiar → Copiar como cURL (Copy → Copy as cURL)**. Si hay varias opciones, selecciona **cURL (bash)**.\n6. Vuelve aquí y **pega todo el texto copiado** en **Sesión de Uber Eats**, debajo. Revisa tu zona horaria y pulsa **Enviar**.\n\nSolo tienes que copiar la petición; no necesitas ejecutarla en una terminal. Contiene acceso a tu cuenta: pégala únicamente aquí y no la compartas.",
+        "data": {
+          "cookie": "Sesión de Uber Eats (pega la petición copiada)",
+          "time_zone": "Zona horaria"
+        }
+      },
+      "connect": {
+        "title": "Conectar Uber Eats",
+        "description": "Usa una computadora con Chrome, Edge o Firefox. No necesitas tener un pedido activo.\n\n1. Abre [ubereats.com](https://www.ubereats.com/) en otra pestaña e **inicia sesión** con la cuenta que quieres conectar.\n2. Presiona **F12** para abrir las **Herramientas para desarrolladores (Developer Tools)**. Si no se abren, presiona **Ctrl+Mayús+I** (Mac: **Comando+Opción+I**).\n3. Selecciona la pestaña **Red (Network)**. Deja las herramientas abiertas y **recarga la página de Uber Eats** para que aparezcan las peticiones.\n4. En el cuadro **Filtrar (Filter)** de esa pestaña, escribe **getActiveOrdersV1**. Si no aparece nada, borra el filtro, recarga otra vez y prueba con **getUserV1**.\n5. Haz **clic derecho sobre la petición** que aparece en la lista. Elige **Copiar → Copiar como cURL (Copy → Copy as cURL)**. Si hay varias opciones, selecciona **cURL (bash)**.\n6. Vuelve aquí y **pega todo el texto copiado** en **Sesión de Uber Eats**, debajo. Revisa tu zona horaria y pulsa **Enviar**.\n\nSolo tienes que copiar la petición; no necesitas ejecutarla en una terminal. Contiene acceso a tu cuenta: pégala únicamente aquí y no la compartas.",
+        "data": {
+          "cookie": "Sesión de Uber Eats (pega la petición copiada)",
+          "time_zone": "Zona horaria"
+        }
+      },
+      "import_legacy": {
+        "title": "Importar una cuenta existente de Uber Eats",
+        "description": "Selecciona una cuenta de la integración anterior. Se comprobará su sesión antes de crear la cuenta nueva. La configuración anterior se conserva. Las entidades que no estén cargadas pueden conservar sus identificadores si no hay conflictos. Las entidades cargadas o con conflictos mantienen su registro original.",
+        "data": {
+          "legacy_entry_id": "Cuenta de la integración anterior"
+        }
+      }
+    },
+    "error": {
+      "invalid_cookie": "El texto copiado no contiene los datos necesarios de la sesión de Uber Eats. Copia la petición completa con Copiar → Copiar como cURL (bash) y vuelve a pegarla.",
+      "invalid_timezone": "Selecciona una zona horaria válida de la lista.",
+      "invalid_auth": "Uber Eats rechazó esta sesión. Vuelve a iniciar sesión en ubereats.com, recarga la página con la pestaña Red abierta y copia una petición nueva.",
+      "cannot_connect": "No se pudo conectar con Uber Eats. Inténtalo de nuevo más tarde."
+    },
+    "abort": {
+      "reauth_successful": "Sesión renovada.",
+      "reconfigure_successful": "Configuración actualizada.",
+      "no_legacy_entries": "No se encontraron cuentas anteriores que se puedan importar."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Privacidad del repartidor",
+        "description": "Los atributos de teléfono y foto están desactivados por defecto. Al activarlos, los datos personales del repartidor pueden guardarse en el historial de Home Assistant y en las copias de seguridad. Desactivarlos no borra el historial existente. Configura exclusiones del historial si las necesitas.",
+        "data": {
+          "courier_phone": "Mostrar el teléfono del repartidor",
+          "courier_photo": "Mostrar la foto del repartidor"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "account_connected": {
+        "name": "Cuenta conectada"
+      },
+      "active_order": {
+        "name": "Pedido activo"
+      }
+    },
+    "sensor": {
+      "status": {
+        "name": "Estado del pedido"
+      },
+      "eta": {
+        "name": "Llegada estimada"
+      },
+      "restaurant": {
+        "name": "Restaurante"
+      },
+      "courier": {
+        "name": "Repartidor"
+      }
+    },
+    "device_tracker": {
+      "courier_tracker": {
+        "name": "Repartidor"
+      }
+    }
+  }
+}

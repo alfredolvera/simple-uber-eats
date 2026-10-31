@@ -1,16 +1,11 @@
-# Simple Uber Eats 4.0.1
+# Simple Uber Eats 4.0.2
 
-Fixes blocking time zone loading reported during HACS review.
+Fixes missing session-renewal prompts and explains how to connect or renew an Uber Eats account directly in the setup screen.
 
-- Resolves time zones through `await dt_util.async_get_time_zone(name)` and
-  passes the resolved object into `Gateway`; the gateway performs no zone lookup.
-- Covers setup, initial configuration, reauthentication, reconfiguration,
-  legacy import and entry migration, including invalid-credential migration.
-- Preserves persisted IANA names, request time zones, local ETA conversion and
-  invalid-zone fallback to the Home Assistant zone, then UTC. Invalid submitted
-  zones remain validation errors.
+- Detects Uber's HTTP 200 `NO_USER_UUID` failure response, including both string and numeric `400` codes, as a rejected session. Home Assistant can now request reauthentication rather than retry indefinitely as if the service were temporarily unavailable.
+- Adds six numbered steps for signing in, opening Developer Tools, selecting Network, finding the request, copying it as cURL, and pasting it into Home Assistant.
+- Includes keyboard alternatives, help when the request does not appear, clearer field labels and errors, and Spanish translations.
 
-Validation: 80 automated tests with Home Assistant 2026.8.0, including eight new
-regression tests that reject synchronous zone loading on the event loop with
-cold caches. Ruff and Python compilation also pass. Publication is gated on
-successful HACS, hassfest and integration-test workflows for this commit.
+If your session has expired, open **Settings → Devices & services → Simple Uber Eats → Reauthenticate** and follow the instructions to paste a fresh request. No active order is required. This update cannot renew an expired session without you signing in again.
+
+Validation: all 83 automated tests pass with the project's pinned Home Assistant 2026.8.0 environment. Ruff, Python compilation and translation-key validation pass.

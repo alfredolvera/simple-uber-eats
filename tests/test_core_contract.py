@@ -119,6 +119,29 @@ class Decoder(unittest.TestCase):
             with self.assertRaises(model.AuthRejected):
                 wire.decode_orders(value, NOW)
 
+    def test_missing_user_session_is_auth_failure_even_with_http_200(self):
+        payload = {
+            "status": "failure",
+            "data": {
+                "code": 400,
+                "message": "NO_USER_UUID",
+                "meta": {"stopPolling": True},
+            },
+        }
+        for code in (400, "400"):
+            payload["data"]["code"] = code
+            with self.subTest(code=code), self.assertRaises(model.AuthRejected):
+                wire.decode_orders(payload, NOW)
+
+    def test_other_failure_envelopes_do_not_trigger_reauthentication(self):
+        for data in (
+            {"code": 400, "message": "INVALID_REQUEST"},
+            {"code": 500, "message": "INTERNAL_ERROR"},
+            {"meta": {"stopPolling": True}},
+        ):
+            with self.subTest(data=data), self.assertRaises(model.ServiceUnavailable):
+                wire.decode_orders({"status": "failure", "data": data}, NOW)
+
     def test_visible_status_courier_restaurant(self):
         order = {
             "uuid": "one",
@@ -336,6 +359,28 @@ class Http:
 
 
 class Gateways(unittest.IsolatedAsyncioTestCase):
+    async def test_http_200_missing_user_rejects_session_and_preserves_rotation(self):
+        gateway = wire.Gateway(
+            Http(
+                Response(
+                    payload={
+                        "status": "failure",
+                        "data": {
+                            "code": "400",
+                            "message": "NO_USER_UUID",
+                            "meta": {"stopPolling": True},
+                        },
+                    },
+                    cookies=SimpleCookie("sid=rotated"),
+                )
+            ),
+            session.WebSession("a", "b"),
+            UTC,
+        )
+        with self.assertRaises(model.AuthRejected):
+            await gateway.read_orders()
+        self.assertEqual(gateway.credentials.sid, "rotated")
+
     async def test_request_and_success(self):
         http = Http(Response(payload=envelope(), cookies=SimpleCookie("sid=rotated")))
         gateway = wire.Gateway(http, session.WebSession("a", "b"), UTC)

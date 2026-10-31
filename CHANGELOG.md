@@ -1,5 +1,16 @@
 # Changelog
 
+## [4.0.2] - 2026-10-31
+
+### Fixed
+
+- Recognizes HTTP 200 failures with `NO_USER_UUID` and code `400` (text or number) as rejected sessions, so Home Assistant requests reauthentication instead of retrying indefinitely as a temporary outage.
+
+### Changed
+
+- Adds numbered browser instructions to connection, session renewal and reconfiguration, including Developer Tools, Network, request filtering, Copy as cURL, and troubleshooting.
+- Clarifies session input labels and authentication errors and adds Spanish translations.
+
 ## [4.0.1] - 2026-10-21
 
 ### Fixed

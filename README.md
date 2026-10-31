@@ -522,6 +522,8 @@ authentication code are never handled by the integration.
 Use **Reconfigure** on the config entry to replace credentials proactively.
 When the integration confirms that authentication has expired, Home Assistant
 starts its reauthentication flow and asks for a fresh Uber Eats session.
+This includes Uber's HTTP 200 failure response with code `400` and message
+`NO_USER_UUID`: HTTP success alone does not mean the session is authenticated.
 
 ## Troubleshooting
 

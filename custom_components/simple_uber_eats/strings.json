@@ -4,9 +4,9 @@
     "step": {
       "user": {
         "title": "Connect Uber Eats",
-        "description": "Paste the authenticated Uber Eats Cookie header or POSIX Copy as cURL. Only the two required session cookies are stored.",
+        "description": "Use a computer with Chrome, Edge, or Firefox. You do not need an active order.\n\n1. Open [ubereats.com](https://www.ubereats.com/) in another tab and sign in to the account you want to connect.\n2. Press **F12** to open **Developer Tools**. If it does not open, press **Ctrl+Shift+I** (Mac: **Command+Option+I**).\n3. Select the **Network** tab. Leave Developer Tools open and **reload the Uber Eats page** to display its requests.\n4. In the Network **Filter** box, type **getActiveOrdersV1**. If nothing appears, clear the filter, reload again, and try **getUserV1**.\n5. **Right-click the matching request** in the list. Select **Copy → Copy as cURL**. If offered a choice, use **cURL (bash)**.\n6. Return here and **paste the entire copied text** into **Uber Eats session** below. Check your time zone and select **Submit**.\n\nCopy the request only; you do not need to run it in a terminal. It contains access to your account: paste it only here and do not share it.",
         "data": {
-          "cookie": "Cookie or Copy as cURL",
+          "cookie": "Uber Eats session (paste copied request)",
           "time_zone": "Time zone"
         },
         "menu_options": {
@@ -16,25 +16,25 @@
       },
       "reauth_confirm": {
         "title": "Renew Uber Eats session",
-        "description": "Paste the authenticated Uber Eats Cookie header or POSIX Copy as cURL. Only the two required session cookies are stored.",
+        "description": "Your saved Uber Eats session is no longer accepted. Follow these steps to renew it.\n\nUse a computer with Chrome, Edge, or Firefox. You do not need an active order.\n\n1. Open [ubereats.com](https://www.ubereats.com/) in another tab and sign in to the account you want to connect.\n2. Press **F12** to open **Developer Tools**. If it does not open, press **Ctrl+Shift+I** (Mac: **Command+Option+I**).\n3. Select the **Network** tab. Leave Developer Tools open and **reload the Uber Eats page** to display its requests.\n4. In the Network **Filter** box, type **getActiveOrdersV1**. If nothing appears, clear the filter, reload again, and try **getUserV1**.\n5. **Right-click the matching request** in the list. Select **Copy → Copy as cURL**. If offered a choice, use **cURL (bash)**.\n6. Return here and **paste the entire copied text** into **Uber Eats session** below. Check your time zone and select **Submit**.\n\nCopy the request only; you do not need to run it in a terminal. It contains access to your account: paste it only here and do not share it.",
         "data": {
-          "cookie": "Cookie or Copy as cURL",
+          "cookie": "Uber Eats session (paste copied request)",
           "time_zone": "Time zone"
         }
       },
       "reconfigure": {
         "title": "Reconfigure Uber Eats",
-        "description": "Paste the authenticated Uber Eats Cookie header or POSIX Copy as cURL. Only the two required session cookies are stored.",
+        "description": "Use a computer with Chrome, Edge, or Firefox. You do not need an active order.\n\n1. Open [ubereats.com](https://www.ubereats.com/) in another tab and sign in to the account you want to connect.\n2. Press **F12** to open **Developer Tools**. If it does not open, press **Ctrl+Shift+I** (Mac: **Command+Option+I**).\n3. Select the **Network** tab. Leave Developer Tools open and **reload the Uber Eats page** to display its requests.\n4. In the Network **Filter** box, type **getActiveOrdersV1**. If nothing appears, clear the filter, reload again, and try **getUserV1**.\n5. **Right-click the matching request** in the list. Select **Copy → Copy as cURL**. If offered a choice, use **cURL (bash)**.\n6. Return here and **paste the entire copied text** into **Uber Eats session** below. Check your time zone and select **Submit**.\n\nCopy the request only; you do not need to run it in a terminal. It contains access to your account: paste it only here and do not share it.",
         "data": {
-          "cookie": "Cookie or Copy as cURL",
+          "cookie": "Uber Eats session (paste copied request)",
           "time_zone": "Time zone"
         }
       },
       "connect": {
         "title": "Connect Uber Eats",
-        "description": "Paste the authenticated Uber Eats Cookie header or POSIX Copy as cURL. Only the two required session cookies are stored.",
+        "description": "Use a computer with Chrome, Edge, or Firefox. You do not need an active order.\n\n1. Open [ubereats.com](https://www.ubereats.com/) in another tab and sign in to the account you want to connect.\n2. Press **F12** to open **Developer Tools**. If it does not open, press **Ctrl+Shift+I** (Mac: **Command+Option+I**).\n3. Select the **Network** tab. Leave Developer Tools open and **reload the Uber Eats page** to display its requests.\n4. In the Network **Filter** box, type **getActiveOrdersV1**. If nothing appears, clear the filter, reload again, and try **getUserV1**.\n5. **Right-click the matching request** in the list. Select **Copy → Copy as cURL**. If offered a choice, use **cURL (bash)**.\n6. Return here and **paste the entire copied text** into **Uber Eats session** below. Check your time zone and select **Submit**.\n\nCopy the request only; you do not need to run it in a terminal. It contains access to your account: paste it only here and do not share it.",
         "data": {
-          "cookie": "Cookie or Copy as cURL",
+          "cookie": "Uber Eats session (paste copied request)",
           "time_zone": "Time zone"
         }
       },
@@ -47,9 +47,9 @@
       }
     },
     "error": {
-      "invalid_cookie": "Supply valid sid and uev2.id.session cookies.",
+      "invalid_cookie": "The copied text does not contain the required Uber Eats session details. Copy the complete request using Copy → Copy as cURL (bash), then paste it again.",
       "invalid_timezone": "Select a valid IANA time zone.",
-      "invalid_auth": "Uber Eats rejected this session. Sign in again and copy fresh cookies.",
+      "invalid_auth": "Uber Eats rejected this session. Sign in to ubereats.com again, reload the page with Network open, and copy a new request.",
       "cannot_connect": "Uber Eats is temporarily unavailable. Try again later."
     },
     "abort": {

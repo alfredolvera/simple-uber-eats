@@ -99,10 +99,18 @@ def _route(value: object) -> tuple[Fix, ...]:
 
 def _check_auth(payload: object) -> None:
     root = _object(payload)
+    data = _object(root.get("data"))
     if (
         _object(root.get("error")).get("code")
         in ("UNAUTHORIZED", "SESSION_EXPIRED", "INVALID_TOKEN")
-        or _object(root.get("data")).get("isLoggedIn") is False
+        or data.get("isLoggedIn") is False
+        # Uber can return HTTP 200 for a session without an authenticated user.
+        # This is a credential failure, not an empty order list or an outage.
+        or (
+            root.get("status") == "failure"
+            and data.get("code") in (400, "400")
+            and data.get("message") == "NO_USER_UUID"
+        )
     ):
         raise AuthRejected()
 
