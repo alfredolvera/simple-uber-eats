@@ -94,12 +94,19 @@ class UberEatsConfigFlow(ConfigFlow, domain=DOMAIN):
                 ),
             }
         )
-        return self.async_show_form(step_id=step_id, data_schema=schema, errors=errors)
+        return self.async_show_form(
+            step_id=step_id,
+            data_schema=schema,
+            errors=errors,
+            description_placeholders={"uber_eats_url": "https://www.ubereats.com/"},
+        )
 
     async def async_step_user(self, user_input=None):
         if user_input is None and self.hass.config_entries.async_entries("uber_eats"):
             return self.async_show_menu(
-                step_id="user", menu_options=["connect", "import_legacy"]
+                step_id="user",
+                menu_options=["connect", "import_legacy"],
+                description_placeholders={"uber_eats_url": "https://www.ubereats.com/"},
             )
         return await self._credentials_step("user", user_input)
 

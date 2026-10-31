@@ -8,4 +8,4 @@ Fixes missing session-renewal prompts and explains how to connect or renew an Ub
 
 If your session has expired, open **Settings → Devices & services → Simple Uber Eats → Reauthenticate** and follow the instructions to paste a fresh request. No active order is required. This update cannot renew an expired session without you signing in again.
 
-Validation: all 83 automated tests pass with the project's pinned Home Assistant 2026.8.0 environment. Ruff, Python compilation and translation-key validation pass.
+Validation: all 84 automated tests pass with the project's pinned Home Assistant 2026.8.0 environment. Ruff, Python compilation and translation-key validation pass.

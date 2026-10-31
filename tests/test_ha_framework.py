@@ -2,8 +2,10 @@
 
 import importlib
 import importlib.util
+import json
 import unittest
 from datetime import UTC
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -13,6 +15,40 @@ PKG = "custom_components.simple_uber_eats"
 
 @unittest.skipUnless(HAS_HA, "Home Assistant runtime is not installed")
 class FrameworkTests(unittest.IsolatedAsyncioTestCase):
+    async def test_browser_guidance_links_render_in_forms_and_legacy_menu(self):
+        flow_mod = importlib.import_module(PKG + ".config_flow")
+        flow = flow_mod.UberEatsConfigFlow()
+        flow.hass = SimpleNamespace(
+            config=SimpleNamespace(time_zone="UTC"),
+            config_entries=SimpleNamespace(async_entries=lambda domain: [object()]),
+        )
+        base = (
+            Path(__file__).resolve().parents[1] / "custom_components/simple_uber_eats"
+        )
+        for step_id in ("user", "connect", "reauth_confirm", "reconfigure"):
+            for user_input in (None, {"cookie": "invalid", "time_zone": "UTC"}):
+                result = await flow._credentials_step(step_id, user_input)
+                placeholders = result.get("description_placeholders") or {}
+                self.assertEqual(
+                    placeholders.get("uber_eats_url"), "https://www.ubereats.com/"
+                )
+                for filename in (
+                    "strings.json",
+                    "translations/en.json",
+                    "translations/es.json",
+                ):
+                    strings = json.loads((base / filename).read_text())
+                    rendered = strings["config"]["step"][step_id]["description"].format(
+                        **placeholders
+                    )
+                    self.assertIn("[ubereats.com](https://www.ubereats.com/)", rendered)
+        menu = await flow.async_step_user()
+        self.assertEqual(menu["type"], "menu")
+        self.assertEqual(
+            menu["description_placeholders"]["uber_eats_url"],
+            "https://www.ubereats.com/",
+        )
+
     async def test_real_platform_imports(self):
         for name in (
             "config_flow",
