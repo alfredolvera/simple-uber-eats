@@ -1,6 +1,6 @@
 # Simple Uber Eats
 
-[![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
+[![HACS Default](https://img.shields.io/badge/HACS-Default-41BDF5.svg)](https://github.com/hacs/default)
 [![GitHub Release](https://img.shields.io/github/v/release/alfredolvera/simple-uber-eats)](https://github.com/alfredolvera/simple-uber-eats/releases)
 [![Maintenance: Active](https://img.shields.io/badge/maintenance-active-brightgreen.svg)](https://github.com/alfredolvera/simple-uber-eats)
 
@@ -354,26 +354,42 @@ Those attributes are removed when the order completes.
 
 ## Installation
 
-Simple Uber Eats 3.0 requires Home Assistant 2026.8 or newer.
+Simple Uber Eats requires Home Assistant 2026.8 or newer.
 
-### HACS custom repository
+### HACS (recommended)
 
-[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=alfredolvera&repository=simple-uber-eats&category=integration)
+Simple Uber Eats is included in the HACS default catalog. You do not need to
+add a custom repository.
 
 1. Open HACS in Home Assistant.
-2. Select **Integrations** and open the menu in the upper-right corner.
-3. Select **Custom repositories**.
-4. Add `https://github.com/alfredolvera/simple-uber-eats` as an **Integration** repository.
-5. Search for **Simple Uber Eats** and install it.
-6. Restart Home Assistant.
-7. Go to **Settings → Devices & services → Add integration** and search for **Simple Uber Eats**.
+2. Search for **Simple Uber Eats**, open its repository page, and download it.
+3. Restart Home Assistant.
+4. Continue with [Add the integration](#add-the-integration) below.
+
+You can also open the repository directly in HACS:
+
+[![Open Simple Uber Eats in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=alfredolvera&repository=simple-uber-eats&category=integration)
 
 ### Manual installation
 
 1. Download the source from [alfredolvera/simple-uber-eats](https://github.com/alfredolvera/simple-uber-eats).
 2. Copy `custom_components/simple_uber_eats/` into Home Assistant's `/config/custom_components/` directory.
 3. Restart Home Assistant.
-4. Add **Simple Uber Eats** from **Settings → Devices & services**.
+4. Continue with [Add the integration](#add-the-integration) below.
+
+### Add the integration
+
+After installing the files through HACS or manually and restarting Home
+Assistant, click the button below to open the Simple Uber Eats setup form:
+
+[![Add Simple Uber Eats to Home Assistant](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=simple_uber_eats)
+
+If prompted by My Home Assistant, enter the URL of your Home Assistant instance.
+The button opens setup; it does not download or install the integration files.
+
+Alternatively, go to **Settings → Devices & services → Add integration** and
+search for **Simple Uber Eats**. Follow the [authentication instructions](#authentication)
+below to connect your Uber Eats account.
 
 ## Authentication
 
